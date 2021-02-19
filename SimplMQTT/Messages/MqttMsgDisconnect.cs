@@ -1,5 +1,6 @@
 using SimplMQTT.Client.Exceptions;
 
+
 namespace SimplMQTT.Client.Messages
 {
     /// <summary>

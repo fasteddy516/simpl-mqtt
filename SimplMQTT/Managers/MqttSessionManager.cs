@@ -2,9 +2,12 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+
 using Crestron.SimplSharp;
-using SimplMQTT.Client.Session;
+
 using SimplMQTT.Client.Messages;
+using SimplMQTT.Client.Session;
+
 
 namespace SimplMQTT.Client.Managers
 {

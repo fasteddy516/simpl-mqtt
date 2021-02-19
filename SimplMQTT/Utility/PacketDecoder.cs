@@ -1,8 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+
 using Crestron.SimplSharp;
-using SimplMQTT.Client.Messages;
 using Crestron.SimplSharp.CrestronLogger;
+
+using SimplMQTT.Client.Messages;
+
+
 namespace SimplMQTT.Client.Utility
 {
     public class PacketDecoder

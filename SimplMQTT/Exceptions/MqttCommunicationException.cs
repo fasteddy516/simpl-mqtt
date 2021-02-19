@@ -1,10 +1,12 @@
 using System;
+
 using Crestron.SimplSharp;
+
 
 namespace SimplMQTT.Client.Exceptions
 {
     /// <summary>
-    /// Exception due to error communication with broker on socket
+    /// Exception due to error communicating with broker on socket
     /// </summary>
     public class MqttCommunicationException : Exception
     {

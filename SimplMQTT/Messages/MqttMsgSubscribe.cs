@@ -1,9 +1,12 @@
 using System;
-using System.Collections.Generic;
 using System.Collections;
+using System.Collections.Generic;
 using System.Text;
-using SimplMQTT.Client.Exceptions;
+
 using Crestron.SimplSharp.CrestronLogger;
+
+using SimplMQTT.Client.Exceptions;
+
 
 namespace SimplMQTT.Client.Messages
 {

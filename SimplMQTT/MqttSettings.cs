@@ -1,10 +1,10 @@
-﻿
+﻿using Crestron.SimplSharp;
 
-using Crestron.SimplSharp;
+
 namespace SimplMQTT.Client
 {
     /// <summary>
-    /// Settings class for the MQTT broker
+    /// Settings class for the MQTT client
     /// </summary>
     public class MqttSettings
     {
@@ -17,14 +17,14 @@ namespace SimplMQTT.Client
         public const int MQTT_ATTEMPTS_RETRY = 3;
         // delay for retry publish, subscribe and unsubscribe for QoS Level 1 or 2
         public const int MQTT_DELAY_RETRY = 10000;
-        // broker need to receive the first message (CONNECT)
+        // broker needs to receive the first message (CONNECT)
         // within a reasonable amount of time after TCP/IP connection 
         public const int MQTT_CONNECT_TIMEOUT = 30000;
         // default inflight queue size
         public const int MQTT_MAX_INFLIGHT_QUEUE_SIZE = int.MaxValue;
-        //Number of simultaneous connections at any given time
+        // number of simultaneous connections at any given time
         public const int NUMBER_OF_CONNECTIONS = 20;
-        //Number of simultaneous connections at any given time
+        // default protocol version (0x04 = 3.1.1)
         public const byte PROTOCOL_VERSION = 0x04;
 
         /// <summary>

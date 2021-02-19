@@ -1,11 +1,10 @@
 using System;
-// if NOT .Net Micro Framework
-#if (!MF_FRAMEWORK_VERSION_V4_2 && !MF_FRAMEWORK_VERSION_V4_3)
-using System.Collections.Generic;
-#endif
 using System.Collections;
+using System.Collections.Generic;
 using System.Text;
+
 using SimplMQTT.Client.Exceptions;
+
 
 namespace SimplMQTT.Client.Messages
 {

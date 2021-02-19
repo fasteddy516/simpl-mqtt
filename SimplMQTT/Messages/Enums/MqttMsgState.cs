@@ -1,5 +1,7 @@
 ﻿using System;
+
 using Crestron.SimplSharp;
+
 
 namespace SimplMQTT.Client.Messages
 {

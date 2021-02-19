@@ -1,6 +1,4 @@
-﻿
-
-namespace SimplMQTT.Client.Session
+﻿namespace SimplMQTT.Client.Session
 {
     /// <summary>
     /// MQTT Client Session

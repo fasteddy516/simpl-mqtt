@@ -1,6 +1,8 @@
 ﻿using System.Collections;
-using SimplMQTT.Client.Messages;
 using System.Collections.Generic;
+
+using SimplMQTT.Client.Messages;
+
 
 namespace SimplMQTT.Client.Session
 {

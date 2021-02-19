@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Text;
 
+
 namespace SimplMQTT.Client.Messages
 {
     /// <summary>

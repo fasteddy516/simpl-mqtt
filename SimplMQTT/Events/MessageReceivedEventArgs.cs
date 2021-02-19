@@ -2,7 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+
 using Crestron.SimplSharp;
+
 
 namespace SimplMQTT.Client.Events
 {
@@ -12,7 +14,7 @@ namespace SimplMQTT.Client.Events
         public string Value { get; private set; }
 
         /// <summary>
-        /// è necessario definire il costruttore di default affinchè simpl+ veda le properties.
+        /// You must define the default constructor for simpl+ to see the properties.
         /// </summary>
         public MessageReceivedEventArgs()
         {
