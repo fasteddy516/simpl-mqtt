@@ -2,27 +2,29 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+
 using Crestron.SimplSharp;
+using Crestron.SimplSharp.CrestronIO;
 using Crestron.SimplSharp.CrestronSockets;
+using Crestron.SimplSharp.CrestronLogger;
+using Crestron.SimplSharp.Cryptography.X509Certificates;
+
+using SimplMQTT.Client.Events;
+using SimplMQTT.Client.Exceptions;
+using SimplMQTT.Client.Managers;
 using SimplMQTT.Client.Messages;
 using SimplMQTT.Client.Utility;
-using SimplMQTT.Client.Exceptions;
-using Crestron.SimplSharp.CrestronLogger;
-using SimplMQTT.Client.Managers;
-using SimplMQTT.Client.Events;
-using Crestron.SimplSharp.Cryptography.X509Certificates;
-using Crestron.SimplSharp.CrestronIO;
+
 
 namespace SimplMQTT.Client
 {
     public class MqttClient
     {
         private const int FIXED_HEADER_OFFSET = 2;
-        private SecureTCPClient tcpClient;
+        //private SecureTCPClient tcpClient; // EW: Disable SSL
+        private TCPClient tcpClient;
         private Random rand = new Random();
         private List<ushort> packetIdentifiers = new List<ushort>();
-        // private CTimer keepAliveTimer;
-        // private CTimer timeout;
         private MqttPublisherManager publisherManager;
         private MqttSessionManager sessionManager;
         public PayloadMapper PayloadMapper { get; private set; }
@@ -83,6 +85,7 @@ namespace SimplMQTT.Client
         public event EventHandler<MessageReceivedEventArgs> MessageArrived;
         public event EventHandler<ErrorOccuredEventArgs> ErrorOccured;
         public event EventHandler<ConnectionStateChangedEventArgs> ConnectionStateChanged;
+
         #region initialize
 
         public MqttClient()
@@ -122,14 +125,15 @@ namespace SimplMQTT.Client
             {
                 try
                 {
-                    tcpClient = new SecureTCPClient(ipAddressOfTheServer.ToString(), port, bufferSize);
-                    if (certificateFileName != "//" && privateKeyFileName != "//")
+                    //tcpClient = new SecureTCPClient(ipAddressOfTheServer.ToString(), port, bufferSize); // EW: Disable SSL
+                    tcpClient = new TCPClient(ipAddressOfTheServer.ToString(), port, bufferSize);                    
+                    /*if (certificateFileName != "//" && privateKeyFileName != "//")
                     {
                         var certificate = ReadFromResource(@"NVRAM\\" + certificateFileName);
                         X509Certificate2 x509Cert = new X509Certificate2(certificate);
                         tcpClient.SetClientCertificate(x509Cert);
                         tcpClient.SetClientPrivateKey(ReadFromResource(@"NVRAM\\" + privateKeyFileName));
-                    }
+                    }*/ // EW: Disable SSL 
                     tcpClient.SocketStatusChange += this.OnSocketStatusChange;
                     PayloadMapper = new PayloadMapper();
                     PayloadMapper.ClientType = clientType;
@@ -241,7 +245,8 @@ namespace SimplMQTT.Client
                 ErrorOccured(this, new ErrorOccuredEventArgs(errorMessage));
         }
 
-        private void OnSocketStatusChange(SecureTCPClient myTCPClient, SocketStatus serverSocketStatus)
+        //private void OnSocketStatusChange(SecureTCPClient myTCPClient, SocketStatus serverSocketStatus) // EW: Disable SSL 
+        private void OnSocketStatusChange(TCPClient myTCPClient, SocketStatus serverSocketStatus)
         {
             CrestronLogger.WriteToLog("MQTTCLIENT - OnSocketStatusChange - " + PayloadMapper.ClientType + " socket status : " + serverSocketStatus, 1);
             if (serverSocketStatus == SocketStatus.SOCKET_STATUS_CONNECTED)
@@ -284,7 +289,8 @@ namespace SimplMQTT.Client
             tcpClient.ConnectToServerAsync(ConnectToServerCallback);
         }
 
-        private void ConnectToServerCallback(SecureTCPClient myTCPClient)
+        //private void ConnectToServerCallback(SecureTCPClient myTCPClient) // EW: Disable SSL 
+        private void ConnectToServerCallback(TCPClient myTCPClient)
         {
             try
             {
@@ -345,7 +351,8 @@ namespace SimplMQTT.Client
             tcpClient.SendDataAsync(pBufferToSend, pBufferToSend.Length, SendCallback);
         }
 
-        private void SendCallback(SecureTCPClient myTCPClient, int numberOfBytesSent)
+        //private void SendCallback(SecureTCPClient myTCPClient, int numberOfBytesSent) // EW: Disable SSL 
+        private void SendCallback(TCPClient myTCPClient, int numberOfBytesSent)
         {
             ;
         }
@@ -354,7 +361,8 @@ namespace SimplMQTT.Client
 
         #region RECEIVE_CONTROL_PACKETS       
 
-        private void ReceiveCallback(SecureTCPClient myClient, int numberOfBytesReceived)
+        //private void ReceiveCallback(SecureTCPClient myClient, int numberOfBytesReceived) // EW: Disable SSL
+        private void ReceiveCallback(TCPClient myClient, int numberOfBytesReceived)
         {
             try
             {
