@@ -51,7 +51,6 @@ namespace SimplMQTT.Client
         public string WillMessage { get; internal set; }
         public bool WillRetain { get; internal set; }
         public static byte ProtocolVersion { get { return MqttSettings.PROTOCOL_VERSION; } }
-        public bool Retain { get; private set; }
 
         #endregion
 
@@ -85,7 +84,6 @@ namespace SimplMQTT.Client
             string willMessage,
             ushort keepAlivePeriod,
             uint publishQoSLevel,
-            uint retain,
             uint cleanSession,
             string certificateFileName,
             string privateKeyFileName
@@ -110,7 +108,6 @@ namespace SimplMQTT.Client
             WillMessage = willMessage;
             Topics = new Dictionary<string, byte>();
             PublishQoSLevel = publishQoSLevel;
-            Retain = retain == 0 ? false : true;
             CleanSession = cleanSession == 0 ? false : true;
 
             #if USE_LOGGER
@@ -271,10 +268,10 @@ namespace SimplMQTT.Client
             }
         }
 
-        public void Publish(string topic, string value)
+        public void Publish(string topic, string value, uint retain)
         {
             byte[] payload = Encoding.ASCII.GetBytes(value);
-            MqttMsgPublish msg = MsgBuilder.BuildPublish(topic, false, (byte)this.PublishQoSLevel, Retain, payload, GetNewPacketIdentifier());
+            MqttMsgPublish msg = MsgBuilder.BuildPublish(topic, false, (byte)this.PublishQoSLevel, (retain > 0), payload, GetNewPacketIdentifier());
             publisherManager.Publish(msg);
             if (this.PublishQoSLevel == 0x00)
                 FreePacketIdentifier(msg.MessageId);
