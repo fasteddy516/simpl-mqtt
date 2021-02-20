@@ -3,19 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-using Crestron.SimplSharp;
-
 using SimplMQTT.Client.Messages;
 
 
 namespace SimplMQTT.Client.Utility
 {
-    /// <summary>
-    /// Each method returns an mqtt control packet 
-    /// </summary>
     public static class MsgBuilder
     {
-
         public static MqttMsgConnack BuildConnack(bool sp, byte returnCode)
         {
             MqttMsgConnack connack = new MqttMsgConnack();
@@ -32,6 +26,7 @@ namespace SimplMQTT.Client.Utility
             connack.encodeRemainingLength(remainingLenght, data, 1);
             return connack;
         }
+
 
         public static MqttMsgPublish BuildPublish(string topic, bool dupFlag, byte qosLevel, bool retain, byte[] message, ushort messageId)
         {
@@ -51,11 +46,13 @@ namespace SimplMQTT.Client.Utility
             return request;
         }
 
+
         public static MqttMsgPingResp BuildPingResp()
         {
             MqttMsgPingResp request = new MqttMsgPingResp();
             return request;
         }
+
 
         public static MqttMsgPuback BuildPubAck(ushort messageId)
         {
@@ -72,6 +69,7 @@ namespace SimplMQTT.Client.Utility
             return pubRec;
         }
 
+
         public static MqttMsgPubcomp BuildPubComp(ushort messageId)
         {
             MqttMsgPubcomp pubComp = new MqttMsgPubcomp();
@@ -79,6 +77,7 @@ namespace SimplMQTT.Client.Utility
             return pubComp;
         }
 
+        
         public static MqttMsgSuback BuildSubAck(ushort messageId, byte[] qosLevels)
         {
             MqttMsgSuback subAck = new MqttMsgSuback();
@@ -87,6 +86,7 @@ namespace SimplMQTT.Client.Utility
             return subAck;
         }
 
+        
         public static MqttMsgUnsuback BuildUnSubAck(ushort messageId)
         {
             MqttMsgUnsuback unSubAck = new MqttMsgUnsuback();
@@ -94,6 +94,7 @@ namespace SimplMQTT.Client.Utility
             return unSubAck;
         }
 
+        
         public static MqttMsgPubrel BuildPubRel(ushort messageId)
         {
             MqttMsgPubrel pubRel = new MqttMsgPubrel();
@@ -101,7 +102,9 @@ namespace SimplMQTT.Client.Utility
             return pubRel;
         }
 
-        public static MqttMsgConnect BuildConnect(string clientId,
+        
+        public static MqttMsgConnect BuildConnect(
+            string clientId,
             string username,
             string password,
             bool willRetain,
@@ -111,11 +114,13 @@ namespace SimplMQTT.Client.Utility
             string willMessage,
             bool cleanSession,
             ushort keepAlivePeriod,
-            byte protocolVersion)
+            byte protocolVersion
+        )
         {
             return new MqttMsgConnect(clientId, username, password, willRetain, willQosLevel, willFlag, willTopic, willMessage, cleanSession, keepAlivePeriod, protocolVersion);
         }
 
+ 
         internal static MqttMsgSubscribe BuildSubscribe(string[] topics , byte[] qosLevels , ushort messageId)
         {
             MqttMsgSubscribe subscribe = new MqttMsgSubscribe();
@@ -124,6 +129,7 @@ namespace SimplMQTT.Client.Utility
             subscribe.MessageId = messageId;
             return subscribe;
         }
+
 
         internal static MqttMsgDisconnect BuildDisconnect()
         {

@@ -15,19 +15,20 @@ namespace SimplMQTT.Client.Session
         /// Client Id
         /// </summary>
         public string ClientId { get; set; }
-
+        
         /// <summary>
         /// Messages inflight during session , Key = MqttMsgContext , Value = packet identifier
         /// </summary>
         public Dictionary<ushort,MqttMsgContext> InflightMessages { get; set; }
 
+        
         /// <summary>
         /// Constructor
         /// </summary>
-        public MqttSession()
-            : this(null)
+        public MqttSession() : this(null)
         {
         }
+
 
         /// <summary>
         /// Constructor
@@ -38,6 +39,7 @@ namespace SimplMQTT.Client.Session
             this.ClientId = clientId;
             this.InflightMessages = new Dictionary<ushort, MqttMsgContext>();
         }
+
 
         /// <summary>
         /// Clean session

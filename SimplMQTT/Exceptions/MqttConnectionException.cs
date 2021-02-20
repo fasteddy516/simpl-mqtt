@@ -1,17 +1,11 @@
 using System;
 
-using Crestron.SimplSharp;
-
 
 namespace SimplMQTT.Client.Exceptions
 {
-    /// <summary>
-    /// Connection to the broker exception
-    /// </summary>
     public class MqttConnectionException : Exception
     {
-        public MqttConnectionException(string message, Exception innerException)
-            : base(message, innerException)
+        public MqttConnectionException(string message, Exception innerException) : base(message, innerException)
         {
         }
     }

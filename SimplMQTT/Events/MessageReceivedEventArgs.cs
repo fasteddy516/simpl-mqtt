@@ -1,9 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-
-using Crestron.SimplSharp;
 
 
 namespace SimplMQTT.Client.Events
@@ -13,12 +8,9 @@ namespace SimplMQTT.Client.Events
         public string Topic { get ; private set;}
         public string Value { get; private set; }
 
-        /// <summary>
-        /// You must define the default constructor for simpl+ to see the properties.
-        /// </summary>
         public MessageReceivedEventArgs()
         {
-            ;
+            //You must define the default constructor for simpl+ to see the properties.
         }
 
         public MessageReceivedEventArgs(string topic, string value)

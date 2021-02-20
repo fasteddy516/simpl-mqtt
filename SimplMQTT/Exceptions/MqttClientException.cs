@@ -1,30 +1,17 @@
 using System;
 
-using Crestron.SimplSharp;
-
 
 namespace SimplMQTT.Client.Exceptions
 {
-    /// <summary>
-    /// MQTT client exception
-    /// </summary>
     public class MqttClientException : Exception
     {
-        /// <summary>
-        /// Constructor
-        /// </summary>
-        /// <param name="code">Error code</param>
+        private MqttClientErrorCode errorCode;
+
         public MqttClientException(MqttClientErrorCode errorCode)
         {
             this.errorCode = errorCode;
         }
 
-        // error code
-        private MqttClientErrorCode errorCode;
-
-        /// <summary>
-        /// Error code
-        /// </summary>
         public MqttClientErrorCode ErrorCode
         {
             get { return this.errorCode; }
@@ -32,9 +19,6 @@ namespace SimplMQTT.Client.Exceptions
         }
     }
 
-    /// <summary>
-    /// MQTT client error code
-    /// </summary>
     public enum MqttClientErrorCode
     {
         /// <summary>

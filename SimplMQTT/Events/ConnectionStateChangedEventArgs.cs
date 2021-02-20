@@ -1,9 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-
-using Crestron.SimplSharp;
 
 
 namespace SimplMQTT.Client.Events
@@ -14,7 +9,7 @@ namespace SimplMQTT.Client.Events
 
         public ConnectionStateChangedEventArgs()
         {
-            ;
+            //You must define the default constructor for simpl+ to see the properties.
         }
 
         public ConnectionStateChangedEventArgs(ushort state)

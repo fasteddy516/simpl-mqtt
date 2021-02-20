@@ -15,11 +15,16 @@ namespace SimplMQTT.Client.Managers
     {
         private string clientId;
         private MqttClientSession session;
+
+        delegate MqttMsgState Del();
+
+        
         public MqttSessionManager(string clientId)
         {
             this.clientId = clientId;
             session = new MqttClientSession(clientId);
         }
+
 
         public void CleanSession()
         {
@@ -27,7 +32,7 @@ namespace SimplMQTT.Client.Managers
             session = new MqttClientSession(clientId);
         }
 
-        delegate MqttMsgState Del();
+        
         public void AddInflightMessage(MqttMsgBase packet)
         {
             MqttMsgContext context = new MqttMsgContext();
@@ -37,10 +42,13 @@ namespace SimplMQTT.Client.Managers
             context.Message = packet;
             session.InflightMessages.Add(packet.MessageId, context);
         }
+
+
         public void ChangeMsgState(ushort messageId, MqttMsgState state)
         {
             session.InflightMessages[messageId].State = state;
         }
+
 
         public void RemoveInflightMessage(ushort messageId)
         {
