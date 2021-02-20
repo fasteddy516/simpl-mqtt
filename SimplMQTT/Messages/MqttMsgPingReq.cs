@@ -1,5 +1,3 @@
-using Crestron.SimplSharp.CrestronLogger;
-
 using SimplMQTT.Client.Exceptions;
 
 

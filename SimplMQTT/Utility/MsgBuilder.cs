@@ -4,7 +4,6 @@ using System.Linq;
 using System.Text;
 
 using Crestron.SimplSharp;
-using Crestron.SimplSharp.CrestronLogger;
 
 using SimplMQTT.Client.Messages;
 

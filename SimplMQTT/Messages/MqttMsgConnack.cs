@@ -1,6 +1,8 @@
 using System;
 
+#if USE_LOGGER
 using Crestron.SimplSharp.CrestronLogger;
+#endif
 
 using SimplMQTT.Client.Exceptions;
 
@@ -106,7 +108,9 @@ namespace SimplMQTT.Client.Messages
             }
             // ...and set return code from broker
             msg.returnCode = buffer[CONN_RETURN_CODE_BYTE_OFFSET];
-            CrestronLogger.WriteToLog("PARSE CONNACK SUCCESS", 1);
+            #if USE_LOGGER
+                CrestronLogger.WriteToLog("PARSE CONNACK SUCCESS", 1);
+            #endif
             return msg;
         }
 

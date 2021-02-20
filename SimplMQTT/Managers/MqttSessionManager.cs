@@ -53,6 +53,5 @@ namespace SimplMQTT.Client.Managers
                 throw new ArgumentNullException();
             }
         }
-
     }
 }

@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 
 using Crestron.SimplSharp;
-using Crestron.SimplSharp.CrestronLogger;
 
 using SimplMQTT.Client.Messages;
 
