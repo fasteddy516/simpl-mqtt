@@ -24,11 +24,11 @@ namespace SimplMQTT.Client
 {
     public class MqttClient
     {
-#if USE_SSL
-        private SecureTCPClient tcpClient;
-#else
-        private TCPClient tcpClient;
-#endif
+        #if USE_SSL
+            private SecureTCPClient tcpClient;
+        #else
+            private TCPClient tcpClient;
+        #endif
         private const int FIXED_HEADER_OFFSET = 2;
         private Random rand = new Random();
         private List<ushort> packetIdentifiers = new List<ushort>();
@@ -42,7 +42,7 @@ namespace SimplMQTT.Client
 
         public uint PublishQoSLevel { get; private set; }
         public ushort KeepAlivePeriod { get; private set; }
-        public Dictionary<string, byte> Topics { get; set; }
+        public Dictionary<string, byte> Subscriptions { get; set; }
         public string ClientId { get; private set; }
         public bool CleanSession { get; private set; }
         public bool WillFlag { get; internal set; }
@@ -106,7 +106,7 @@ namespace SimplMQTT.Client
             WillQosLevel = (byte)willQoS;
             WillTopic = willTopic;
             WillMessage = willMessage;
-            Topics = new Dictionary<string, byte>();
+            Subscriptions = new Dictionary<string, byte>();
             PublishQoSLevel = publishQoSLevel;
             CleanSession = cleanSession == 0 ? false : true;
 
@@ -116,18 +116,18 @@ namespace SimplMQTT.Client
 
             try
             {
-#if USE_SSL
-                tcpClient = new SecureTCPClient(ipAddressOfTheServer.ToString(), port, bufferSize);
-                if (certificateFileName != "//" && privateKeyFileName != "//")
-                {
-                    var certificate = ReadFromResource(@"NVRAM\\" + certificateFileName);
-                    X509Certificate2 x509Cert = new X509Certificate2(certificate);
-                    tcpClient.SetClientCertificate(x509Cert);
-                    tcpClient.SetClientPrivateKey(ReadFromResource(@"NVRAM\\" + privateKeyFileName));
-                }
-#else
-                tcpClient = new TCPClient(ipAddressOfTheServer.ToString(), port, bufferSize);
-#endif
+                #if USE_SSL
+                    tcpClient = new SecureTCPClient(ipAddressOfTheServer.ToString(), port, bufferSize);
+                    if (certificateFileName != "//" && privateKeyFileName != "//")
+                    {
+                        var certificate = ReadFromResource(@"NVRAM\\" + certificateFileName);
+                        X509Certificate2 x509Cert = new X509Certificate2(certificate);
+                        tcpClient.SetClientCertificate(x509Cert);
+                        tcpClient.SetClientPrivateKey(ReadFromResource(@"NVRAM\\" + privateKeyFileName));
+                    }
+                #else
+                    tcpClient = new TCPClient(ipAddressOfTheServer.ToString(), port, bufferSize);
+                #endif
                 tcpClient.SocketStatusChange += this.OnSocketStatusChange;
                 PacketDecoder = new PacketDecoder();
                 sessionManager = new MqttSessionManager(clientId);
@@ -144,20 +144,27 @@ namespace SimplMQTT.Client
             #endif
         }
 
-        private byte[] ReadFromResource(string path)
-        {
-            FileStream stream = new FileStream(path, FileMode.Open, FileAccess.Read);
-            var bytes = new byte[stream.Length];
-            stream.Read(bytes, 0, bytes.Length);
-            stream.Close();
-            return bytes;
-        }
-        
-        public void AddTopic(string topic)
+
+        #if USE_SSL
+            private byte[] ReadFromResource(string path)
+            {
+                FileStream stream = new FileStream(path, FileMode.Open, FileAccess.Read);
+                var bytes = new byte[stream.Length];
+                stream.Read(bytes, 0, bytes.Length);
+                stream.Close();
+                return bytes;
+            }
+        #endif
+
+
+        public void AddSubscription(string topic, uint qos)
         {
             try
             {
-                Topics.Add(topic, (byte)PublishQoSLevel);
+                if (qos > 2)
+                    throw new ArgumentOutOfRangeException("QoS value must be in the range 0-2.");
+                else
+                    Subscriptions.Add(topic, (byte)qos);
             }
             catch (Exception e)
             {
@@ -281,16 +288,6 @@ namespace SimplMQTT.Client
 
         #region CONNECTION_TO_BROKER
 
-
-        private void OnConnectionStateChanged(ushort connectionStatus)
-        {
-            if (ConnectionStateChanged != null)
-                ConnectionStateChanged(this, new ConnectionStateChangedEventArgs(connectionStatus));
-        }
-
-        /// <summary>
-        /// Establishes a connection with the Broker
-        /// </summary>
         public void Connect()
         {
             #if USE_LOGGER
@@ -299,11 +296,12 @@ namespace SimplMQTT.Client
             tcpClient.ConnectToServerAsync(ConnectToServerCallback);
         }
 
-#if USE_SSL
-        private void ConnectToServerCallback(SecureTCPClient myTCPClient)
-#else
-        private void ConnectToServerCallback(TCPClient myTCPClient)
-#endif
+
+        #if USE_SSL
+            private void ConnectToServerCallback(SecureTCPClient myTCPClient)
+        #else
+            private void ConnectToServerCallback(TCPClient myTCPClient)
+        #endif
         {
             try
             {
@@ -330,7 +328,7 @@ namespace SimplMQTT.Client
                 #if USE_LOGGER
                     CrestronLogger.WriteToLog("MQTTCLIENT - ConnectToServerCallback - Error occured : " + e.ErrorCode, 7);
                     CrestronLogger.WriteToLog("MQTTCLIENT - ConnectToServerCallback - Error occured : " + e.StackTrace, 7);
-                #endif            
+                #endif
             }
             catch (Exception e)
             {
@@ -342,11 +340,19 @@ namespace SimplMQTT.Client
             }
         }
 
+        
         private void HandleCONNACKType(MqttMsgConnack mqttMsgConnack)
         {
             SubscribeToTopics();
             //StartKeepAlive();
             tcpClient.ReceiveDataAsync(ReceiveCallback);
+        }
+
+        
+        private void OnConnectionStateChanged(ushort connectionStatus)
+        {
+            if (ConnectionStateChanged != null)
+                ConnectionStateChanged(this, new ConnectionStateChangedEventArgs(connectionStatus));
         }
 
         #endregion
@@ -630,7 +636,7 @@ namespace SimplMQTT.Client
 
         private void SubscribeToTopics()
         {
-            Send(MsgBuilder.BuildSubscribe(Topics.Keys.ToArray(), Topics.Values.ToArray(), GetNewPacketIdentifier()));
+            Send(MsgBuilder.BuildSubscribe(Subscriptions.Keys.ToArray(), Subscriptions.Values.ToArray(), GetNewPacketIdentifier()));
         }
 
 
