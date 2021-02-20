@@ -106,10 +106,8 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Session\MqttClientSession.cs" />
     <Compile Include="Session\MqttSession.cs" />
-    <Compile Include="Utility\ClientType.cs" />
     <Compile Include="Utility\MsgBuilder.cs" />
     <Compile Include="Utility\PacketDecoder.cs" />
-    <Compile Include="Utility\PayloadMapper.cs" />
     <None Include="Properties\ControlSystem.cfg" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CompactFramework.CSharp.targets" />

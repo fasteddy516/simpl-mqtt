@@ -1,4 +1,7 @@
-﻿namespace SimplMQTT.Client
+﻿using Crestron.SimplSharp;
+
+
+namespace SimplMQTT.Client
 {
     /// <summary>
     /// Settings class for the MQTT client

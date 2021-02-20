@@ -10,7 +10,7 @@ using Crestron.SimplSharp.CrestronSockets;
     using Crestron.SimplSharp.CrestronLogger;
 #endif
 #if USE_SSL
-using Crestron.SimplSharp.Cryptography.X509Certificates;
+    using Crestron.SimplSharp.Cryptography.X509Certificates;
 #endif
 
 using SimplMQTT.Client.Events;
@@ -34,7 +34,6 @@ namespace SimplMQTT.Client
         private List<ushort> packetIdentifiers = new List<ushort>();
         private MqttPublisherManager publisherManager;
         private MqttSessionManager sessionManager;
-        public PayloadMapper PayloadMapper { get; private set; }
         public PacketDecoder PacketDecoder { get; private set; }
 
         private delegate void RouteControlPacketDelegate(MqttMsgBase packet);
@@ -42,49 +41,16 @@ namespace SimplMQTT.Client
         #region client properties
 
         public uint PublishQoSLevel { get; private set; }
-
         public ushort KeepAlivePeriod { get; private set; }
-
         public Dictionary<string, byte> Topics { get; set; }
-
         public string ClientId { get; private set; }
-
-        /// <summary>
-        /// Clean session flag
-        /// </summary>
         public bool CleanSession { get; private set; }
-
-        /// <summary>
-        /// Will flag
-        /// </summary>
         public bool WillFlag { get; internal set; }
-
-        /// <summary>
-        /// Will QOS level
-        /// </summary>
         public byte WillQosLevel { get; internal set; }
-
-        /// <summary>
-        /// Will topic
-        /// </summary>
         public string WillTopic { get; internal set; }
-
-        /// <summary>
-        /// Will message
-        /// </summary>
         public string WillMessage { get; internal set; }
-
-        /// <summary>
-        /// Will retain
-        /// </summary>
         public bool WillRetain { get; internal set; }
-
-
-        /// <summary>
-        /// MQTT protocol version
-        /// </summary>
         public static byte ProtocolVersion { get { return MqttSettings.PROTOCOL_VERSION; } }
-
         public bool Retain { get; private set; }
 
         #endregion
@@ -118,7 +84,6 @@ namespace SimplMQTT.Client
             string willTopic,
             string willMessage,
             ushort keepAlivePeriod,
-            ClientType clientType,
             uint publishQoSLevel,
             uint retain,
             uint cleanSession,
@@ -167,8 +132,6 @@ namespace SimplMQTT.Client
                 tcpClient = new TCPClient(ipAddressOfTheServer.ToString(), port, bufferSize);
 #endif
                 tcpClient.SocketStatusChange += this.OnSocketStatusChange;
-                PayloadMapper = new PayloadMapper();
-                PayloadMapper.ClientType = clientType;
                 PacketDecoder = new PacketDecoder();
                 sessionManager = new MqttSessionManager(clientId);
                 publisherManager = new MqttPublisherManager(sessionManager);
@@ -295,7 +258,7 @@ namespace SimplMQTT.Client
 #endif
         {
             #if USE_LOGGER
-                CrestronLogger.WriteToLog("MQTTCLIENT - OnSocketStatusChange - " + PayloadMapper.ClientType + " socket status : " + serverSocketStatus, 1);
+                CrestronLogger.WriteToLog("MQTTCLIENT - OnSocketStatusChange - socket status : " + serverSocketStatus, 1);
             #endif
             if (serverSocketStatus == SocketStatus.SOCKET_STATUS_CONNECTED)
             {
@@ -361,7 +324,7 @@ namespace SimplMQTT.Client
                     }
                     else
                     {
-                        throw new MqttConnectionException("MQTTCLIENT - ConnectToServerCallback - " + PayloadMapper.ClientType + " , Expected CONNACK , received " + packet, new ArgumentException());
+                        throw new MqttConnectionException("MQTTCLIENT - ConnectToServerCallback, Expected CONNACK , received " + packet, new ArgumentException());
                     }
                 }
             }
@@ -592,7 +555,7 @@ namespace SimplMQTT.Client
             throw new NotImplementedException();
             //MqttMsgPublish publish = sessionManager.GetPublishMessage(pubRel.MessageId);
             //string publishPayload = System.Text.Encoding.ASCII.GetString(publish.Message, 0, publish.Message.Length);
-            //OnMessageArrived(publish.Topic, PayloadMapper.Map(publishPayload));
+            //OnMessageArrived(publish.Topic, publishPayload);
         }
 
         private void HandlePUBRECType(MqttMsgPubrec pubRec)
@@ -618,7 +581,7 @@ namespace SimplMQTT.Client
                                 CrestronLogger.WriteToLog("MQTTCLIENT - HandlePUBLISHType - Routing qos0 message", 5);
                             #endif
                             string publishPayload = System.Text.Encoding.ASCII.GetString(publish.Message, 0, publish.Message.Length);
-                            OnMessageArrived(publish.Topic, PayloadMapper.Map(publishPayload));
+                            OnMessageArrived(publish.Topic, publishPayload);
                             break;
                         }
                     case MqttMsgBase.QOS_LEVEL_AT_LEAST_ONCE:
@@ -628,7 +591,7 @@ namespace SimplMQTT.Client
                             #endif
                             string publishPayload = System.Text.Encoding.ASCII.GetString(publish.Message, 0, publish.Message.Length);
                             Send(MsgBuilder.BuildPubAck(publish.MessageId));
-                            OnMessageArrived(publish.Topic, PayloadMapper.Map(publishPayload));
+                            OnMessageArrived(publish.Topic, publishPayload);
                             break;
                         }
                     case MqttMsgBase.QOS_LEVEL_EXACTLY_ONCE:
