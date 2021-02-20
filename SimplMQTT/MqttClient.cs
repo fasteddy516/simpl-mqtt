@@ -42,7 +42,7 @@ namespace SimplMQTT.Client
 
         public ushort KeepAlivePeriod { get; private set; }
         public Dictionary<string, byte> Subscriptions { get; set; }
-        public string ClientId { get; private set; }
+        public string ClientID { get; private set; }
         public bool CleanSession { get; private set; }
         public bool WillFlag { get; internal set; }
         public byte WillQosLevel { get; internal set; }
@@ -70,19 +70,18 @@ namespace SimplMQTT.Client
         }
 
         public void Initialize(
+            string clientID,
+            string brokerAddress,
+            ushort brokerPort,
             string username,
             string password,
-            ushort port,
-            string ipAddressOfTheServer,
-            ushort bufferSize,
-            string clientId,
             ushort willFlag,
             ushort willRetain,
             uint willQoS,
             string willTopic,
             string willMessage,
-            ushort keepAlivePeriod,
-            uint cleanSession
+            uint cleanSession,
+            ushort bufferSize
             #if USE_SSL
                 ,string certificateFileName,
                 string privateKeyFileName
@@ -92,15 +91,15 @@ namespace SimplMQTT.Client
             MqttSettings.Instance.Username = username;
             MqttSettings.Instance.Password = password;
             MqttSettings.Instance.BufferSize = Convert.ToInt32(bufferSize);
-            MqttSettings.Instance.Port = Convert.ToInt32(port);
-            MqttSettings.Instance.IPAddressOfTheServer = IPAddress.Parse(ipAddressOfTheServer);
+            MqttSettings.Instance.Port = Convert.ToInt32(brokerPort);
+            MqttSettings.Instance.IPAddressOfTheServer = IPAddress.Parse(brokerAddress);
 
             #if USE_LOGGER
                 CrestronLogger.WriteToLog("Instance Settings initialized", 1);
             #endif
             
-            KeepAlivePeriod = keepAlivePeriod;
-            ClientId = clientId;
+            KeepAlivePeriod = 0; // currently set to 0, as the keepalive mechanism has not been implemented
+            ClientID = clientID;
             WillFlag = willFlag == 0 ? false : true;
             WillRetain = willRetain == 0 ? false : true;
             WillQosLevel = (byte)willQoS;
@@ -125,11 +124,11 @@ namespace SimplMQTT.Client
                         tcpClient.SetClientPrivateKey(ReadFromResource(@"NVRAM\\" + privateKeyFileName));
                     }
                 #else
-                    tcpClient = new TCPClient(ipAddressOfTheServer.ToString(), port, bufferSize);
+                    tcpClient = new TCPClient(brokerAddress.ToString(), brokerPort, bufferSize);
                 #endif
                 tcpClient.SocketStatusChange += this.OnSocketStatusChange;
                 PacketDecoder = new PacketDecoder();
-                sessionManager = new MqttSessionManager(clientId);
+                sessionManager = new MqttSessionManager(clientID);
                 publisherManager = new MqttPublisherManager(sessionManager);
                 publisherManager.PacketToSend += this.OnPacketToSend;
             }
@@ -139,7 +138,7 @@ namespace SimplMQTT.Client
             }
 
             #if USE_LOGGER
-                CrestronLogger.WriteToLog("MQTTCLIENT - Initialize - completed : " + clientId, 1);
+                CrestronLogger.WriteToLog("MQTTCLIENT - Initialize - completed : " + clientID, 1);
             #endif
         }
 
@@ -305,7 +304,7 @@ namespace SimplMQTT.Client
             {
                 if (myTCPClient.ClientStatus == SocketStatus.SOCKET_STATUS_CONNECTED)
                 {
-                    MqttMsgConnect connect = MsgBuilder.BuildConnect(this.ClientId, MqttSettings.Instance.Username, MqttSettings.Instance.Password, this.WillRetain,
+                    MqttMsgConnect connect = MsgBuilder.BuildConnect(this.ClientID, MqttSettings.Instance.Username, MqttSettings.Instance.Password, this.WillRetain,
                          this.WillQosLevel, this.WillFlag, this.WillTopic, this.WillMessage, this.CleanSession, this.KeepAlivePeriod, ProtocolVersion);
                     Send(connect);
                     //TODO: timer for connack
@@ -342,7 +341,6 @@ namespace SimplMQTT.Client
         private void HandleCONNACKType(MqttMsgConnack mqttMsgConnack)
         {
             SubscribeToTopics();
-            //StartKeepAlive();
             tcpClient.ReceiveDataAsync(ReceiveCallback);
         }
 
@@ -508,37 +506,9 @@ namespace SimplMQTT.Client
             Disconnect(false);
         }
 
-        /* private void StartKeepAlive()
-         {
-             Send(MsgBuilder.BuildPingReq());
-             keepAliveTimer = new CTimer(KeepAliveTimerCallback, false, long.Parse(KeepAlivePeriod.ToString()));
-         }*/
-
-
-        /*private void KeepAliveTimerCallback(object userSpecific)
-        {
-            bool hasPingResponseBeenReceived = (bool)userSpecific;
-            if (hasPingResponseBeenReceived)
-            {
-
-            }
-            else
-            {
-                OnErrorOccured("The server didn't respond on time ,disconnecting");
-                Disconnect(false);
-            }
-        }
-
-        private void TimoutTimerCallBack(object userSpecific)
-        {
-
-        }*/
 
         private void HandlePINGRESPType(MqttMsgPingResp mqttMsgPingResp)
         {
-            /* keepAliveTimer.Stop();
-             keepAliveTimer.Dispose();
-             keepAliveTimer = new CTimer(KeepAliveTimerCallback, true, long.Parse(KeepAlivePeriod.ToString()));*/
         }
 
         #endregion
