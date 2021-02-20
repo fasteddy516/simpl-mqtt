@@ -40,7 +40,6 @@ namespace SimplMQTT.Client
         
         #region client properties
 
-        public uint PublishQoSLevel { get; private set; }
         public ushort KeepAlivePeriod { get; private set; }
         public Dictionary<string, byte> Subscriptions { get; set; }
         public string ClientId { get; private set; }
@@ -83,7 +82,6 @@ namespace SimplMQTT.Client
             string willTopic,
             string willMessage,
             ushort keepAlivePeriod,
-            uint publishQoSLevel,
             uint cleanSession,
             string certificateFileName,
             string privateKeyFileName
@@ -107,7 +105,6 @@ namespace SimplMQTT.Client
             WillTopic = willTopic;
             WillMessage = willMessage;
             Subscriptions = new Dictionary<string, byte>();
-            PublishQoSLevel = publishQoSLevel;
             CleanSession = cleanSession == 0 ? false : true;
 
             #if USE_LOGGER
@@ -278,10 +275,9 @@ namespace SimplMQTT.Client
         public void Publish(string topic, string value, uint retain)
         {
             byte[] payload = Encoding.ASCII.GetBytes(value);
-            MqttMsgPublish msg = MsgBuilder.BuildPublish(topic, false, (byte)this.PublishQoSLevel, (retain > 0), payload, GetNewPacketIdentifier());
+            MqttMsgPublish msg = MsgBuilder.BuildPublish(topic, false, (retain > 0), payload, GetNewPacketIdentifier());
             publisherManager.Publish(msg);
-            if (this.PublishQoSLevel == 0x00)
-                FreePacketIdentifier(msg.MessageId);
+            FreePacketIdentifier(msg.MessageId); // this can be done automatically as long as we only publish at QoS 0
         }
 
         #endregion

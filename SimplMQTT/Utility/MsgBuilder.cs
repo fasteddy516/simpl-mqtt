@@ -28,11 +28,11 @@ namespace SimplMQTT.Client.Utility
         }
 
 
-        public static MqttMsgPublish BuildPublish(string topic, bool dupFlag, byte qosLevel, bool retain, byte[] message, ushort messageId)
+        public static MqttMsgPublish BuildPublish(string topic, bool dupFlag, bool retain, byte[] message, ushort messageId)
         {
             MqttMsgPublish publish = new MqttMsgPublish();
             publish.DupFlag = dupFlag;
-            publish.QosLevel = qosLevel;
+            publish.QosLevel = 0x00; // publishing at QoS 0 is all that is currently supported
             publish.Retain = retain;
             publish.Topic = topic;
             publish.MessageId = messageId;
