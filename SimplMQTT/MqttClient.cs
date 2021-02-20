@@ -82,9 +82,11 @@ namespace SimplMQTT.Client
             string willTopic,
             string willMessage,
             ushort keepAlivePeriod,
-            uint cleanSession,
-            string certificateFileName,
-            string privateKeyFileName
+            uint cleanSession
+            #if USE_SSL
+                ,string certificateFileName,
+                string privateKeyFileName
+            #endif
         )
         {
             MqttSettings.Instance.Username = username;
