@@ -20,9 +20,12 @@ namespace SimplMQTT.Client
 {
     public class MqttClient
     {
-        private const int FIXED_HEADER_OFFSET = 2;
-        //private SecureTCPClient tcpClient; // EW: Disable SSL
+#if USE_SSL
+        private SecureTCPClient tcpClient;
+#else
         private TCPClient tcpClient;
+#endif
+        private const int FIXED_HEADER_OFFSET = 2;
         private Random rand = new Random();
         private List<ushort> packetIdentifiers = new List<ushort>();
         private MqttPublisherManager publisherManager;
@@ -125,15 +128,18 @@ namespace SimplMQTT.Client
             {
                 try
                 {
-                    //tcpClient = new SecureTCPClient(ipAddressOfTheServer.ToString(), port, bufferSize); // EW: Disable SSL
-                    tcpClient = new TCPClient(ipAddressOfTheServer.ToString(), port, bufferSize);                    
-                    /*if (certificateFileName != "//" && privateKeyFileName != "//")
-                    {
-                        var certificate = ReadFromResource(@"NVRAM\\" + certificateFileName);
-                        X509Certificate2 x509Cert = new X509Certificate2(certificate);
-                        tcpClient.SetClientCertificate(x509Cert);
-                        tcpClient.SetClientPrivateKey(ReadFromResource(@"NVRAM\\" + privateKeyFileName));
-                    }*/ // EW: Disable SSL 
+#if USE_SSL
+                        tcpClient = new SecureTCPClient(ipAddressOfTheServer.ToString(), port, bufferSize);
+                        if (certificateFileName != "//" && privateKeyFileName != "//")
+                        {
+                            var certificate = ReadFromResource(@"NVRAM\\" + certificateFileName);
+                            X509Certificate2 x509Cert = new X509Certificate2(certificate);
+                            tcpClient.SetClientCertificate(x509Cert);
+                            tcpClient.SetClientPrivateKey(ReadFromResource(@"NVRAM\\" + privateKeyFileName));
+                        }
+#else
+                        tcpClient = new TCPClient(ipAddressOfTheServer.ToString(), port, bufferSize);
+#endif
                     tcpClient.SocketStatusChange += this.OnSocketStatusChange;
                     PayloadMapper = new PayloadMapper();
                     PayloadMapper.ClientType = clientType;
@@ -245,8 +251,11 @@ namespace SimplMQTT.Client
                 ErrorOccured(this, new ErrorOccuredEventArgs(errorMessage));
         }
 
-        //private void OnSocketStatusChange(SecureTCPClient myTCPClient, SocketStatus serverSocketStatus) // EW: Disable SSL 
+#if USE_SSL
+        private void OnSocketStatusChange(SecureTCPClient myTCPClient, SocketStatus serverSocketStatus)
+#else
         private void OnSocketStatusChange(TCPClient myTCPClient, SocketStatus serverSocketStatus)
+#endif
         {
             CrestronLogger.WriteToLog("MQTTCLIENT - OnSocketStatusChange - " + PayloadMapper.ClientType + " socket status : " + serverSocketStatus, 1);
             if (serverSocketStatus == SocketStatus.SOCKET_STATUS_CONNECTED)
@@ -289,8 +298,11 @@ namespace SimplMQTT.Client
             tcpClient.ConnectToServerAsync(ConnectToServerCallback);
         }
 
-        //private void ConnectToServerCallback(SecureTCPClient myTCPClient) // EW: Disable SSL 
+#if USE_SSL
+        private void ConnectToServerCallback(SecureTCPClient myTCPClient)
+#else
         private void ConnectToServerCallback(TCPClient myTCPClient)
+#endif
         {
             try
             {
@@ -351,8 +363,11 @@ namespace SimplMQTT.Client
             tcpClient.SendDataAsync(pBufferToSend, pBufferToSend.Length, SendCallback);
         }
 
-        //private void SendCallback(SecureTCPClient myTCPClient, int numberOfBytesSent) // EW: Disable SSL 
+#if USE_SSL
+        private void SendCallback(SecureTCPClient myTCPClient, int numberOfBytesSent)
+#else
         private void SendCallback(TCPClient myTCPClient, int numberOfBytesSent)
+#endif
         {
             ;
         }
@@ -361,8 +376,11 @@ namespace SimplMQTT.Client
 
         #region RECEIVE_CONTROL_PACKETS       
 
-        //private void ReceiveCallback(SecureTCPClient myClient, int numberOfBytesReceived) // EW: Disable SSL
+#if USE_SSL
+        private void ReceiveCallback(SecureTCPClient myClient, int numberOfBytesReceived)
+#else
         private void ReceiveCallback(TCPClient myClient, int numberOfBytesReceived)
+#endif
         {
             try
             {
