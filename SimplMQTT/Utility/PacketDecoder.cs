@@ -17,7 +17,9 @@ namespace SimplMQTT.Client.Utility
         public MqttMsgBase DecodeControlPacket(byte[] data)
         {
             #if USE_LOGGER
-                CrestronLogger.WriteToLog("MQTTCLIENT - RECEIVE - " + BitConverter.ToString(data), 2);
+                #if PACKET_DEBUG
+                    CrestronLogger.WriteToLog("MQTTCLIENT - RECEIVE - " + BitConverter.ToString(data), 2);
+                #endif
             #endif
             
             byte fixedHeaderFirstByte = (byte)(data[0] >> MSG_TYPE_OFFSET);

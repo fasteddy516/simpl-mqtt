@@ -117,7 +117,7 @@ namespace SimplMQTT.Client
             try
             {
                 #if USE_SSL
-                    tcpClient = new SecureTCPClient(ipAddressOfTheServer.ToString(), port, bufferSize);
+                    tcpClient = new SecureTCPClient(brokerAddress.ToString(), brokerPort, bufferSize);
                     if (certificateFileName != "//" && privateKeyFileName != "//")
                     {
                         var certificate = ReadFromResource(@"NVRAM\\" + certificateFileName);
@@ -268,11 +268,7 @@ namespace SimplMQTT.Client
             #if USE_LOGGER
                 CrestronLogger.WriteToLog("MQTTCLIENT - OnSocketStatusChange - socket status : " + serverSocketStatus, 1);
             #endif
-            if (serverSocketStatus == SocketStatus.SOCKET_STATUS_CONNECTED)
-            {
-                OnConnectionStateChanged(1);
-            }
-            else
+            if (serverSocketStatus != SocketStatus.SOCKET_STATUS_CONNECTED)
             {
                 OnConnectionStateChanged(0);
                 if (connectionRequested && (disconnectTimer == null))
@@ -349,6 +345,7 @@ namespace SimplMQTT.Client
         {
             SubscribeToTopics();
             tcpClient.ReceiveDataAsync(ReceiveCallback);
+            OnConnectionStateChanged(1); // SIMPL+ doesn't need to think we're connected until the login process is complete
         }
 
         
@@ -371,7 +368,9 @@ namespace SimplMQTT.Client
         {
             #if USE_LOGGER
                 CrestronLogger.WriteToLog("MQTTCLIENT - SEND - Sending packet type " + packet, 2);
-                CrestronLogger.WriteToLog("MQTTCLIENT - SEND - " + BitConverter.ToString(packet.GetBytes(ProtocolVersion)), 2);
+                #if PACKET_DEBUG
+                    CrestronLogger.WriteToLog("MQTTCLIENT - SEND - " + BitConverter.ToString(packet.GetBytes(ProtocolVersion)), 2);
+                #endif
             #endif
             byte[] pBufferToSend = packet.GetBytes(ProtocolVersion);
             tcpClient.SendDataAsync(pBufferToSend, pBufferToSend.Length, SendCallback);
