@@ -52,6 +52,10 @@ namespace SimplMQTT.Client
         public string WillMessage { get; internal set; }
         public bool WillRetain { get; internal set; }
         public static byte ProtocolVersion { get { return MqttSettings.PROTOCOL_VERSION; } }
+        #if USE_SSL
+            private string CertificateFile = "";
+            private string KeyFile = "";
+        #endif
 
         #endregion
 
@@ -84,10 +88,6 @@ namespace SimplMQTT.Client
             string willMessage,
             uint cleanSession,
             ushort bufferSize
-            #if USE_SSL
-                ,string certificateFileName,
-                string privateKeyFileName
-            #endif
         )
         {
             MqttSettings.Instance.Username = username;
@@ -118,12 +118,12 @@ namespace SimplMQTT.Client
             {
                 #if USE_SSL
                     tcpClient = new SecureTCPClient(brokerAddress.ToString(), brokerPort, bufferSize);
-                    if (certificateFileName != "//" && privateKeyFileName != "//")
+                    if (CertificateFile != "" && KeyFile != "")
                     {
-                        var certificate = ReadFromResource(@"NVRAM\\" + certificateFileName);
+                        var certificate = ReadFromResource(@"NVRAM\\" + CertificateFile);
                         X509Certificate2 x509Cert = new X509Certificate2(certificate);
                         tcpClient.SetClientCertificate(x509Cert);
-                        tcpClient.SetClientPrivateKey(ReadFromResource(@"NVRAM\\" + privateKeyFileName));
+                        tcpClient.SetClientPrivateKey(ReadFromResource(@"NVRAM\\" + KeyFile));
                     }
                 #else
                     tcpClient = new TCPClient(brokerAddress.ToString(), brokerPort, bufferSize);
@@ -153,6 +153,12 @@ namespace SimplMQTT.Client
                 stream.Read(bytes, 0, bytes.Length);
                 stream.Close();
                 return bytes;
+            }
+
+            public void UseCertificate(string certificateFileName, string keyFileName)
+            {
+                CertificateFile = certificateFileName;
+                KeyFile = keyFileName;
             }
         #endif
 
