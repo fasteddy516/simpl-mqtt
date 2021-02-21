@@ -35,6 +35,8 @@ namespace SimplMQTT.Client
         private MqttPublisherManager publisherManager;
         private MqttSessionManager sessionManager;
         public PacketDecoder PacketDecoder { get; private set; }
+        private CTimer disconnectTimer = null;
+        private bool connectionRequested = false;
 
         private delegate void RouteControlPacketDelegate(MqttMsgBase packet);
         
@@ -180,24 +182,28 @@ namespace SimplMQTT.Client
             {
                 Stop();
             }
+            connectionRequested = true;
             Connect();
         }
 
+
         public void Stop()
         {
-            if (tcpClient.ClientStatus == SocketStatus.SOCKET_STATUS_CONNECTED)
+            connectionRequested = false;
+            if (disconnectTimer != null)
+            {
+                disconnectTimer.Stop();
+                disconnectTimer.Dispose();
+                disconnectTimer = null;
+            }
+            if ((tcpClient != null) && (tcpClient.ClientStatus == SocketStatus.SOCKET_STATUS_CONNECTED))
             {
                 Send(MsgBuilder.BuildDisconnect());
                 tcpClient.DisconnectFromServer();
             }
-            //tcpClient.Dispose();
         }
 
 
-        /// <summary>
-        /// Set the value of the CrestronLogger.PrintTheLog to true or false.
-        /// </summary>
-        /// <param name="val"> val = 0 equal false , val = 1 equals true</param>
         public void Log(ushort val)
         {
             #if USE_LOGGER
@@ -253,11 +259,11 @@ namespace SimplMQTT.Client
                 ErrorOccured(this, new ErrorOccuredEventArgs(errorMessage));
         }
 
-#if USE_SSL
-        private void OnSocketStatusChange(SecureTCPClient myTCPClient, SocketStatus serverSocketStatus)
-#else
-        private void OnSocketStatusChange(TCPClient myTCPClient, SocketStatus serverSocketStatus)
-#endif
+        #if USE_SSL
+            private void OnSocketStatusChange(SecureTCPClient myTCPClient, SocketStatus serverSocketStatus)
+        #else
+            private void OnSocketStatusChange(TCPClient myTCPClient, SocketStatus serverSocketStatus)
+        #endif
         {
             #if USE_LOGGER
                 CrestronLogger.WriteToLog("MQTTCLIENT - OnSocketStatusChange - socket status : " + serverSocketStatus, 1);
@@ -269,7 +275,8 @@ namespace SimplMQTT.Client
             else
             {
                 OnConnectionStateChanged(0);
-                CTimer timer = new CTimer(DisconnectTimerCallback, 5000);
+                if (connectionRequested && (disconnectTimer == null))
+                    disconnectTimer = new CTimer(DisconnectTimerCallback, 5000);
             }
         }
 
@@ -363,17 +370,18 @@ namespace SimplMQTT.Client
         public void Send(MqttMsgBase packet)
         {
             #if USE_LOGGER
-                CrestronLogger.WriteToLog("MQTTCLIENT - SEND - Sending packet :" + packet, 2);
+                CrestronLogger.WriteToLog("MQTTCLIENT - SEND - Sending packet type " + packet, 2);
+                CrestronLogger.WriteToLog("MQTTCLIENT - SEND - " + BitConverter.ToString(packet.GetBytes(ProtocolVersion)), 2);
             #endif
             byte[] pBufferToSend = packet.GetBytes(ProtocolVersion);
             tcpClient.SendDataAsync(pBufferToSend, pBufferToSend.Length, SendCallback);
         }
 
-#if USE_SSL
-        private void SendCallback(SecureTCPClient myTCPClient, int numberOfBytesSent)
-#else
-        private void SendCallback(TCPClient myTCPClient, int numberOfBytesSent)
-#endif
+        #if USE_SSL
+            private void SendCallback(SecureTCPClient myTCPClient, int numberOfBytesSent)
+        #else
+            private void SendCallback(TCPClient myTCPClient, int numberOfBytesSent)
+        #endif
         {
             ;
         }
@@ -382,11 +390,11 @@ namespace SimplMQTT.Client
 
         #region RECEIVE_CONTROL_PACKETS       
 
-#if USE_SSL
-        private void ReceiveCallback(SecureTCPClient myClient, int numberOfBytesReceived)
-#else
-        private void ReceiveCallback(TCPClient myClient, int numberOfBytesReceived)
-#endif
+        #if USE_SSL
+            private void ReceiveCallback(SecureTCPClient myClient, int numberOfBytesReceived)
+        #else
+            private void ReceiveCallback(TCPClient myClient, int numberOfBytesReceived)
+        #endif
         {
             try
             {
@@ -622,9 +630,10 @@ namespace SimplMQTT.Client
 
         public void DisconnectTimerCallback(object userSpecific)
         {
-            if (tcpClient.ClientStatus != SocketStatus.SOCKET_STATUS_CONNECTED)
+            if (connectionRequested && (tcpClient.ClientStatus != SocketStatus.SOCKET_STATUS_CONNECTED))
             {
-                CTimer timer = new CTimer(DisconnectTimerCallback, 5000);
+                disconnectTimer.Dispose();
+                disconnectTimer = new CTimer(DisconnectTimerCallback, 5000);
                 Connect();
             }
         }
