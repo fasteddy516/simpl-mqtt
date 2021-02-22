@@ -204,7 +204,10 @@ namespace SimplMQTT.Client
             }
             if ((tcpClient != null) && (tcpClient.ClientStatus == SocketStatus.SOCKET_STATUS_CONNECTED))
             {
-                Send(MsgBuilder.BuildDisconnect());
+                // using a blocking call to ensure it completes before we kill the socket
+                byte[] pBufferToSend = MsgBuilder.BuildDisconnect().GetBytes(ProtocolVersion);
+                tcpClient.SendData(pBufferToSend, pBufferToSend.Length); 
+                
                 tcpClient.DisconnectFromServer();
             }
         }
