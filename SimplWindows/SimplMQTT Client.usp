@@ -1,0 +1,466 @@
+/** MODULE INFORMATION ********************************************************
+Name........: SimplMQTT Client
+Version.....: 20210221
+Author......: Edward Wright
+
+
+*** MIT LICENSE ***************************************************************
+
+Copyright (c) 2020 sahajquinci 
+Copyright (c) 2021 Edward Wright
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+
+*** REVISION HISTORY **********************************************************
+20210221 - initial release
+
+
+/** COMPILER DIRECTIVES ******************************************************/
+//#define_constant USE_SSL 0 // uncommment this line to enable SSL
+
+#if_defined USE_SSL
+	#symbol_name "SimplMQTT Client (SSL)"
+	#user_simplsharp_library "SimplMQTT.Client-SSL"
+#endif
+#if_not_defined USE_SSL
+	#symbol_name "SimplMQTT Client (No SSL)"
+	#user_simplsharp_library "SimplMQTT.Client-NoSSL"
+#endif
+#category "46" "MQTT"
+#default_volatile
+#enable_stack_checking
+#enable_trace
+
+
+/** CONSTANT DEFINITIONS *****************************************************/
+#define_constant NUM_DIGITAL	10 
+#define_constant NUM_ANALOG		10
+#define_constant NUM_SERIAL		10
+#define_constant NUM_TOTAL		30
+
+#define_constant MAX_TOPIC_LENGTH	255
+#define_constant MAX_MSG_LENGTH		255
+
+#define_constant STOPPED	0
+#define_constant STOPPING	1
+#define_constant STARTING	2
+#define_constant STARTED	3
+
+#define_constant QOS_0	0 
+#define_constant QOS_1	1
+
+#define_constant DO_NOT_SUBSCRIBE 2
+
+#define_constant RETAIN_OFF	0
+#define_constant RETAIN_ON	1
+
+
+/** PARAMETER DEFINITIONS ****************************************************/
+string_parameter ClientID[20];
+#begin_parameter_properties ClientID
+	propDefaultUnit = unitString;
+	propValidUnits = unitString;
+	propShortDescription = "String used to identify the client to the broker - must be unique for each client.";
+#end_parameter_properties
+
+string_parameter BrokerAddress[14];
+#begin_parameter_properties BrokerAddress
+	propDefaultUnit = unitString;
+	propValidUnits = unitString;
+	propShortDescription = "IP address of the MQTT broker.";
+#end_parameter_properties
+
+integer_parameter BrokerPort;
+#begin_parameter_properties BrokerPort
+	propDefaultUnit = unitDecimal;
+	propValidUnits = unitDecimal;
+	propBounds = 1025d, 65535d;
+	propDefaultValue = 1883d;
+	propShortDescription = "TCP port used by the MQTT broker (default = 8883).";
+#end_parameter_properties
+
+string_parameter Username[50];
+#begin_parameter_properties Username
+	propDefaultUnit = unitString;
+	propValidUnits = unitString;
+	propDefaultValue = "";
+	propShortDescription = "Username to authenticate with the broker.";
+#end_parameter_properties
+
+string_parameter Password[50];
+#begin_parameter_properties Password
+	propDefaultUnit = unitString;
+	propValidUnits = unitString;
+	propDefaultValue = "";
+	propShortDescription = "Password to authenticate with the broker.";
+#end_parameter_properties
+
+#if_defined USE_SSL
+	string_parameter SSLCertificateFile[100];
+	#begin_parameter_properties SSLCertificateFile
+		propDefaultUnit = unitString;
+		propValidUnits = unitString;
+		propDefaultValue = "x";
+		propShortDescription = "Filename of SSL Certificate (must be located in NVRAM folder).";
+	#end_parameter_properties
+
+	string_parameter SSLPrivateKeyFile[100];
+	#begin_parameter_properties SSLPrivateKeyFile
+		propDefaultUnit = unitString;
+		propValidUnits = unitString;
+		propDefaultValue = "x";
+		propShortDescription = "Filename of SSL Private Key (must be located in NVRAM folder).";
+	#end_parameter_properties
+#endif
+
+string_parameter WillSettings[MAX_TOPIC_LENGTH];
+#begin_parameter_properties WillSettings
+	propDefaultUnit = unitString;
+	propValidUnits = unitString;
+	propDefaultValue = "x";
+	propShortDescription = "Format = <QoS (0/1)><Retain (R/x)>;<Topic>, i.e. 1R;device/LWT";
+#end_parameter_properties
+
+string_parameter WillMessage[MAX_MSG_LENGTH];
+#begin_parameter_properties WillMessage
+	propDefaultUnit = unitString;
+	propValidUnits = unitString;
+	propDefaultValue = "Offline";
+	propShortDescription = "Specifies the Will message.";
+#end_parameter_properties
+
+integer_parameter CleanSession;
+#begin_parameter_properties CleanSession
+	propDefaultUnit = unitDecimal;
+	propValidUnits = unitDecimal;
+	propDefaultValue = 1d;
+	propList = {0d, "False"}, {1d, "True"};
+	propShortDescription = "Set to True to enforce a Clean Session when connecting to the broker.";
+#end_parameter_properties
+
+integer_parameter PublishOnConnect;
+#begin_parameter_properties PublishOnConnect
+	propDefaultUnit = unitDecimal;
+	propValidUnits = unitDecimal;
+	propDefaultValue = 0d;
+	propList = {0d, "False"}, {1d, "True"};
+	propShortDescription = "Set to True to publish the current value of all inputs on connection to the broker.";
+#end_parameter_properties
+
+integer_parameter BufferSize;
+#begin_parameter_properties BufferSize
+	propDefaultUnit = unitDecimal;
+	propValidUnits = unitDecimal;
+	propBounds = 128d, 8192d;
+	propDefaultValue = 255d;
+	propShortDescription = "Determines the maximum packet size that can be handled.";
+#end_parameter_properties
+
+integer_parameter Logging;
+#begin_parameter_properties Logging
+	propDefaultUnit = unitDecimal;
+	propValidUnits = unitDecimal;
+	propDefaultValue = 0d;
+	propList = {0d, "Disabled"}, {1d, "Enabled"};
+	propShortDescription = "Set to Enabled to enable logging via CrestronLogger.";
+#end_parameter_properties
+
+string_parameter _skip_, _skip_;
+
+string_parameter Settings[NUM_TOTAL, NUM_TOTAL][MAX_TOPIC_LENGTH];
+#begin_parameter_properties Settings
+	propDefaultUnit = unitString;
+	propValidUnits = unitString;
+	propDefaultValue = "x";
+	propShortDescription = "Format = <Subscribe QoS (0/1/x)><Retain (R/x)>;<Topic>, i.e. 1R;MyTopic";
+#end_parameter_properties
+
+
+/** MODULE INPUT/OUTPUT DEFINITIONS ******************************************/
+#if_defined USE_SSL digital_input _skip_, _skip_; digital_output _skip_, _skip_; #endif
+
+digital_input	_skip_, _skip_, _skip_, _skip_, _skip_, _skip_, _skip_, _skip_, _skip_, _skip_, _skip_,
+				enable, _skip_, d_in[NUM_DIGITAL, NUM_DIGITAL]
+;
+digital_output	_skip_, _skip_, _skip_, _skip_, _skip_, _skip_, _skip_, _skip_, _skip_, _skip_, _skip_,
+				connect_fb, _skip_, d_out[NUM_DIGITAL, NUM_DIGITAL]
+;
+analog_input	a_in[NUM_ANALOG, NUM_ANALOG]
+;
+analog_output	a_out[NUM_ANALOG, NUM_ANALOG]
+;
+string_input	s_in$[NUM_SERIAL, NUM_SERIAL][255]
+;
+string_output	s_out$[NUM_SERIAL, NUM_SERIAL]
+;
+
+
+/** CUSTOM STRUCTURES ********************************************************/
+structure TopicStructure
+{
+	string	Value[MAX_TOPIC_LENGTH];
+	integer	QoS;
+	integer Retain;
+};
+
+
+/** GLOBAL VARIABLES *********************************************************/
+integer	g_initialized, g_state;
+string  g_serial_in$[NUM_SERIAL][MAX_MSG_LENGTH];
+
+MqttClient client;
+
+TopicStructure g_topic[NUM_TOTAL];
+TopicStructure g_will;
+
+
+/** LOCAL FUNCTIONS **********************************************************/
+function processTopics()
+{
+	integer i, c;
+	string	scratch$[MAX_TOPIC_LENGTH];
+
+	for (i = 1 to NUM_TOTAL)
+	{
+		g_topic[i].Value = "";
+		g_topic[i].QoS = DO_NOT_SUBSCRIBE;
+		g_topic[i].Retain = RETAIN_OFF;
+
+		if (len(Settings[i]) > 3) // must be greater than 3 (Subscribe byte + Retain Byte + Separator + Topic)
+		{
+			scratch$ = Settings[i];
+			
+			// 1: determine subscription state/qos
+			c = getc(scratch$);
+			if ((c = '0') || (c = '1'))
+				g_topic[i].QoS = c - '0';
+
+			// 2: determine if message published to this topic should be retained
+			c = getc(scratch$);
+			if ((c = 'R') || (c = 'r'))
+				g_topic[i].Retain = RETAIN_ON;
+
+			// 3: remove divider character
+			c = getc(scratch$);
+
+			// 4: get topic value
+			g_topic[i].Value = scratch$;
+
+			// 5: add topic to subscriptions if needed
+			if (g_topic[i].QoS < DO_NOT_SUBSCRIBE)
+				client.AddSubscription(g_topic[i].Value, g_topic[i].QoS);
+		}
+	}
+}
+
+function publishStates()
+{
+    integer i, offset;
+
+    // publish digitals
+    for (i = 1 to NUM_DIGITAL)
+    {        
+	    if (len(g_topic[i].Value))
+            client.Publish(g_topic[i].Value, itoa(d_in[i]), g_topic[i].Retain);
+    }
+
+    // publish analogs
+    offset = NUM_DIGITAL;
+    for (i = 1 to NUM_ANALOG)
+    {   
+	    if (len(g_topic[offset + i].Value))    
+            client.Publish(g_topic[offset + i].Value, itoa(a_in[i]), g_topic[offset + i].Retain);
+    }
+
+    //publish serials
+    offset = NUM_DIGITAL + NUM_ANALOG;
+    for (i = 1 to NUM_SERIAL)
+    {
+	    if (len(g_topic[offset + i].Value))
+            client.Publish(g_topic[offset + i].Value, g_serial_in$[i], g_topic[offset + i].Retain);
+    }
+}
+
+
+/** MODULE EVENTS ************************************************************/
+push enable
+{
+	if (!g_initialized || (g_state > STOPPING)) terminateEvent;
+
+	while (g_state = STOPPING) delay(2);
+
+	g_state = STARTING;
+
+		client.Start();
+
+	g_state = STARTED;
+}
+
+
+release enable
+{
+	if (!g_initialized || (g_state < STARTING)) terminateEvent;
+
+	while (g_state = STARTING) delay(2);
+
+	g_state = STOPPING;
+	
+		client.Stop();
+
+	g_state = STOPPED;
+}
+
+
+threadsafe change d_in
+{
+	integer i;
+	
+	i = getLastModifiedArrayIndex();
+
+	if (!connect_fb) terminateEvent;
+
+	if (len(g_topic[i].Value))
+		client.Publish(g_topic[i].Value, itoa(d_in[i]), g_topic[i].Retain);
+}
+
+
+threadsafe change a_in
+{
+	integer i, t;
+	
+	i = getLastModifiedArrayIndex();
+	t = i + NUM_DIGITAL;
+
+	if (!connect_fb) terminateEvent;
+
+	if (len(g_topic[t].Value))
+		client.Publish(g_topic[t].Value, itoa(a_in[i]), g_topic[t].Retain);
+}
+
+
+threadsafe change s_in$
+{
+	integer i, t;
+
+	i = getLastModifiedArrayIndex();
+	t = i + NUM_DIGITAL + NUM_ANALOG;
+    g_serial_in$[i] = s_in$[i];
+	
+	if (!connect_fb) terminateEvent;
+
+	if (len(g_topic[t].Value))
+		client.Publish(g_topic[t].Value, g_serial_in$[i], g_topic[t].Retain);
+}
+
+
+/** EVENT HANDLERS ***********************************************************/
+eventhandler ConnectionStateChangedEventHandler(MqttClient client , ConnectionStateChangedEventArgs e)
+{
+	connect_fb = e.State;
+
+    if (connect_fb && PublishOnConnect)
+        publishStates();
+}
+
+
+eventhandler MessageArrivedEventHandler(MqttClient client, MessageReceivedEventArgs e)                                                                       
+{
+	integer i;
+
+	for(i = 1 to NUM_TOTAL)
+	{
+		// check if topic matches something we have subscribed to
+		if ((g_topic[i].QoS <= QOS_1) && (g_topic[i].Value = e.Topic))
+		{
+			// subscription associated with a digital output
+			if (i <= NUM_DIGITAL)
+				d_out[i] = min(atoi(e.Value), 1);
+			
+			// subscription associated with an analog output
+			else if (i <= (NUM_DIGITAL + NUM_ANALOG))
+				a_out[i - NUM_DIGITAL] = atoi(e.Value);
+
+			// subscription associated with a serial output
+			else
+				s_out$[i - NUM_DIGITAL - NUM_ANALOG] = e.Value;
+		}	
+	}
+}
+
+
+eventhandler ErrorOccuredEventHandler(MqttClient client , ErrorOccuredEventArgs e)
+{
+	// not used at this time
+}
+
+
+ /** INITIALIZATION **********************************************************/
+function main()
+{
+	g_initialized = off;
+
+		g_state = STOPPED;
+
+		waitForInitializationComplete();
+
+		client.Log(Logging);
+
+        // start with default will parameters (will disabled)
+        g_will.QoS = QOS_1;
+        g_will.Retain = RETAIN_OFF;
+        g_will.Value = "";
+ 
+        // use will settings from parameters if they have been specified
+        if (len(WillSettings) >= 4)
+        {
+            g_will.QoS = min(atoi(left(WillSettings, 1)), QOS_1);
+            if (lower(mid(WillSettings, 2, 1)) = "r")
+                g_will.Retain = RETAIN_ON;
+            g_will.Value = mid(WillSettings, 4, len(WillSettings) - 3);
+        }
+
+		client.Initialize(
+            ClientID,
+            BrokerAddress,
+            BrokerPort,
+            Username,
+            Password,
+            len(g_will.Value),
+            g_will.Retain,
+            g_will.QoS,
+            g_will.Value,
+            WillMessage,
+            CleanSession,
+            BufferSize
+        );
+
+		RegisterEvent (client, MessageArrived, MessageArrivedEventHandler);
+		RegisterEvent (client, ErrorOccured, ErrorOccuredEventHandler);
+		RegisterEvent (client, ConnectionStateChanged, ConnectionStateChangedEventHandler);
+
+		processTopics();
+
+		#if_defined USE_SSL
+			if ((len(SSLCertificateFile) > 1) && (len(SSLPrivateKeyFile) > 1))
+				client.UseCertificate(SSLCertificateFile, SSLPrivateKeyFile);
+		#endif
+
+	g_initialized = on;
+}

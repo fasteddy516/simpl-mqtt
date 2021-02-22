@@ -1,0 +1,12 @@
+## Ignore Crestron SIMPL Windows temporary files, build results, and archives
+
+# Crestron SIMPL Windows files
+*.ASV
+*.lpz
+*.sig
+*.sm2
+*.smft
+*.hash
+*.zip
+
+SPlsWork/
