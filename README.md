@@ -13,3 +13,5 @@ SimplMQTT was forked from [sahajquinci](https://github.com/sahajquinci)'s *simpl
 - SSL functionality from the original fork has been carried over, but remains untested.
 
 - Messages can only be published at `QoS0`.  Subscriptions can be at `QoS0` or `QoS1`.  `QoS2` is not supported.
+
+- SSL and Non-SSL version of the module cannot be mixed in the same SIMPL Windows program slot.
