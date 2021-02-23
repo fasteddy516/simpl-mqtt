@@ -9,9 +9,7 @@ using Crestron.SimplSharp.CrestronSockets;
 #if USE_LOGGER
     using Crestron.SimplSharp.CrestronLogger;
 #endif
-#if USE_SSL
-    using Crestron.SimplSharp.Cryptography.X509Certificates;
-#endif
+using Crestron.SimplSharp.Cryptography.X509Certificates;
 
 using SimplMQTT.Client.Events;
 using SimplMQTT.Client.Exceptions;
@@ -24,11 +22,8 @@ namespace SimplMQTT.Client
 {
     public class MqttClient
     {
-        #if USE_SSL
-            private SecureTCPClient tcpClient;
-        #else
-            private TCPClient tcpClient;
-        #endif
+        private SecureTCPClient SSLClient = null;
+        private TCPClient NoSSLClient = null;
         private const int FIXED_HEADER_OFFSET = 2;
         private Random rand = new Random();
         private List<ushort> packetIdentifiers = new List<ushort>();
@@ -37,6 +32,7 @@ namespace SimplMQTT.Client
         public PacketDecoder PacketDecoder { get; private set; }
         private CTimer disconnectTimer = null;
         private bool connectionRequested = false;
+        private bool EnableSSL = false;
 
         private delegate void RouteControlPacketDelegate(MqttMsgBase packet);
         
@@ -52,10 +48,8 @@ namespace SimplMQTT.Client
         public string WillMessage { get; internal set; }
         public bool WillRetain { get; internal set; }
         public static byte ProtocolVersion { get { return MqttSettings.PROTOCOL_VERSION; } }
-        #if USE_SSL
-            private string CertificateFile = "";
-            private string KeyFile = "";
-        #endif
+        private string CertificateFile = "";
+        private string KeyFile = "";
 
         #endregion
 
@@ -79,6 +73,7 @@ namespace SimplMQTT.Client
             string clientID,
             string brokerAddress,
             ushort brokerPort,
+            ushort enableSSL,
             string username,
             string password,
             ushort willFlag,
@@ -95,7 +90,7 @@ namespace SimplMQTT.Client
             MqttSettings.Instance.BufferSize = Convert.ToInt32(bufferSize);
             MqttSettings.Instance.Port = Convert.ToInt32(brokerPort);
             MqttSettings.Instance.IPAddressOfTheServer = IPAddress.Parse(brokerAddress);
-
+            EnableSSL = (enableSSL > 0);
             #if USE_LOGGER
                 CrestronLogger.WriteToLog("Instance Settings initialized", 1);
             #endif
@@ -116,19 +111,23 @@ namespace SimplMQTT.Client
 
             try
             {
-                #if USE_SSL
-                    tcpClient = new SecureTCPClient(brokerAddress.ToString(), brokerPort, bufferSize);
+                if (EnableSSL)
+                {
+                    SSLClient = new SecureTCPClient(brokerAddress.ToString(), brokerPort, bufferSize);
                     if (CertificateFile != "" && KeyFile != "")
                     {
                         var certificate = ReadFromResource(@"NVRAM\\" + CertificateFile);
                         X509Certificate2 x509Cert = new X509Certificate2(certificate);
-                        tcpClient.SetClientCertificate(x509Cert);
-                        tcpClient.SetClientPrivateKey(ReadFromResource(@"NVRAM\\" + KeyFile));
+                        SSLClient.SetClientCertificate(x509Cert);
+                        SSLClient.SetClientPrivateKey(ReadFromResource(@"NVRAM\\" + KeyFile));
                     }
-                #else
-                    tcpClient = new TCPClient(brokerAddress.ToString(), brokerPort, bufferSize);
-                #endif
-                tcpClient.SocketStatusChange += this.OnSocketStatusChange;
+                    SSLClient.SocketStatusChange += this.OnSSLSocketStatusChange;
+                }
+                else
+                {
+                    NoSSLClient = new TCPClient(brokerAddress.ToString(), brokerPort, bufferSize);
+                    NoSSLClient.SocketStatusChange += this.OnNoSSLSocketStatusChange;
+                }
                 PacketDecoder = new PacketDecoder();
                 sessionManager = new MqttSessionManager(clientID);
                 publisherManager = new MqttPublisherManager(sessionManager);
@@ -145,23 +144,20 @@ namespace SimplMQTT.Client
         }
 
 
-        #if USE_SSL
-            private byte[] ReadFromResource(string path)
-            {
-                FileStream stream = new FileStream(path, FileMode.Open, FileAccess.Read);
-                var bytes = new byte[stream.Length];
-                stream.Read(bytes, 0, bytes.Length);
-                stream.Close();
-                return bytes;
-            }
+        private byte[] ReadFromResource(string path)
+        {
+            FileStream stream = new FileStream(path, FileMode.Open, FileAccess.Read);
+            var bytes = new byte[stream.Length];
+            stream.Read(bytes, 0, bytes.Length);
+            stream.Close();
+            return bytes;
+        }
 
-            public void UseCertificate(string certificateFileName, string keyFileName)
-            {
-                CertificateFile = certificateFileName;
-                KeyFile = keyFileName;
-            }
-        #endif
-
+        public void UseCertificate(string certificateFileName, string keyFileName)
+        {
+            CertificateFile = certificateFileName;
+            KeyFile = keyFileName;
+        }
 
         public void AddSubscription(string topic, uint qos)
         {
@@ -184,7 +180,7 @@ namespace SimplMQTT.Client
 
         public void Start()
         {
-            if (tcpClient.ClientStatus == SocketStatus.SOCKET_STATUS_CONNECTED)
+            if (ClientStatus() == SocketStatus.SOCKET_STATUS_CONNECTED)
             {
                 Stop();
             }
@@ -202,13 +198,11 @@ namespace SimplMQTT.Client
                 disconnectTimer.Dispose();
                 disconnectTimer = null;
             }
-            if ((tcpClient != null) && (tcpClient.ClientStatus == SocketStatus.SOCKET_STATUS_CONNECTED))
+            if (ClientExists() && (ClientStatus() == SocketStatus.SOCKET_STATUS_CONNECTED))
             {
                 // using a blocking call to ensure it completes before we kill the socket
-                byte[] pBufferToSend = MsgBuilder.BuildDisconnect().GetBytes(ProtocolVersion);
-                tcpClient.SendData(pBufferToSend, pBufferToSend.Length); 
-                
-                tcpClient.DisconnectFromServer();
+                ClientSendData(MsgBuilder.BuildDisconnect().GetBytes(ProtocolVersion)); 
+                ClientDisconnect();
             }
         }
 
@@ -268,11 +262,7 @@ namespace SimplMQTT.Client
                 ErrorOccured(this, new ErrorOccuredEventArgs(errorMessage));
         }
 
-        #if USE_SSL
-            private void OnSocketStatusChange(SecureTCPClient myTCPClient, SocketStatus serverSocketStatus)
-        #else
-            private void OnSocketStatusChange(TCPClient myTCPClient, SocketStatus serverSocketStatus)
-        #endif
+        private void OnSocketStatusChange(SocketStatus serverSocketStatus)
         {
             #if USE_LOGGER
                 CrestronLogger.WriteToLog("MQTTCLIENT - OnSocketStatusChange - socket status : " + serverSocketStatus, 1);
@@ -302,26 +292,22 @@ namespace SimplMQTT.Client
             #if USE_LOGGER
                 CrestronLogger.WriteToLog("MQTTCLIENT - Connect , attempting connection to " + MqttSettings.Instance.IPAddressOfTheServer.ToString(), 1);
             #endif
-            tcpClient.ConnectToServerAsync(ConnectToServerCallback);
+            ClientConnectToServerAsync();
         }
 
 
-        #if USE_SSL
-            private void ConnectToServerCallback(SecureTCPClient myTCPClient)
-        #else
-            private void ConnectToServerCallback(TCPClient myTCPClient)
-        #endif
+        private void ConnectToServerCallback()
         {
             try
             {
-                if (myTCPClient.ClientStatus == SocketStatus.SOCKET_STATUS_CONNECTED)
+                if (ClientStatus() == SocketStatus.SOCKET_STATUS_CONNECTED)
                 {
                     MqttMsgConnect connect = MsgBuilder.BuildConnect(this.ClientID, MqttSettings.Instance.Username, MqttSettings.Instance.Password, this.WillRetain,
                          this.WillQosLevel, this.WillFlag, this.WillTopic, this.WillMessage, this.CleanSession, this.KeepAlivePeriod, ProtocolVersion);
                     Send(connect);
                     //TODO: timer for connack
-                    tcpClient.ReceiveData();
-                    MqttMsgBase packet = PacketDecoder.DecodeControlPacket(tcpClient.IncomingDataBuffer);
+                    ClientReceiveData();
+                    MqttMsgBase packet = PacketDecoder.DecodeControlPacket(ClientIncomingDataBuffer());
                     if (packet.Type == MqttMsgBase.MQTT_MSG_CONNACK_TYPE)
                     {
                         RouteControlPacketToMethodHandler(packet);
@@ -353,7 +339,7 @@ namespace SimplMQTT.Client
         private void HandleCONNACKType(MqttMsgConnack mqttMsgConnack)
         {
             SubscribeToTopics();
-            tcpClient.ReceiveDataAsync(ReceiveCallback);
+            ClientReceiveDataAsync();
             OnConnectionStateChanged(1); // SIMPL+ doesn't need to think we're connected until the login process is complete
         }
 
@@ -381,36 +367,22 @@ namespace SimplMQTT.Client
                     CrestronLogger.WriteToLog("MQTTCLIENT - SEND - " + BitConverter.ToString(packet.GetBytes(ProtocolVersion)), 2);
                 #endif
             #endif
-            byte[] pBufferToSend = packet.GetBytes(ProtocolVersion);
-            tcpClient.SendDataAsync(pBufferToSend, pBufferToSend.Length, SendCallback);
-        }
-
-        #if USE_SSL
-            private void SendCallback(SecureTCPClient myTCPClient, int numberOfBytesSent)
-        #else
-            private void SendCallback(TCPClient myTCPClient, int numberOfBytesSent)
-        #endif
-        {
-            ;
+            ClientSendDataAsync(packet.GetBytes(ProtocolVersion));
         }
 
         #endregion
 
         #region RECEIVE_CONTROL_PACKETS       
 
-        #if USE_SSL
-            private void ReceiveCallback(SecureTCPClient myClient, int numberOfBytesReceived)
-        #else
-            private void ReceiveCallback(TCPClient myClient, int numberOfBytesReceived)
-        #endif
+        private void ReceiveCallback(int numberOfBytesReceived)
         {
             try
             {
                 if (numberOfBytesReceived != 0)
                 {
                     byte[] incomingDataBuffer = new byte[numberOfBytesReceived];
-                    Array.Copy(myClient.IncomingDataBuffer, 0, incomingDataBuffer, 0, numberOfBytesReceived);
-                    tcpClient.ReceiveDataAsync(ReceiveCallback);
+                    Array.Copy(ClientIncomingDataBuffer(), 0, incomingDataBuffer, 0, numberOfBytesReceived);
+                    ClientReceiveDataAsync();
                     DecodeMultiplePacketsByteArray(incomingDataBuffer);
                 }
             }
@@ -638,7 +610,7 @@ namespace SimplMQTT.Client
 
         public void DisconnectTimerCallback(object userSpecific)
         {
-            if (connectionRequested && (tcpClient.ClientStatus != SocketStatus.SOCKET_STATUS_CONNECTED))
+            if (connectionRequested && (ClientStatus() != SocketStatus.SOCKET_STATUS_CONNECTED))
             {
                 disconnectTimer.Dispose();
                 disconnectTimer = new CTimer(DisconnectTimerCallback, 5000);
@@ -668,5 +640,113 @@ namespace SimplMQTT.Client
                 packetIdentifiers.Remove(identifier);
         }
 
+       #region SSL / Non-SSL Abstraction
+
+        internal SocketStatus ClientStatus()
+        {
+            if (EnableSSL)
+                return SSLClient.ClientStatus;
+            else
+                return NoSSLClient.ClientStatus;
+        }
+
+        private void OnSSLSocketStatusChange(SecureTCPClient myTCPClient, SocketStatus serverSocketStatus)
+        {
+            OnSocketStatusChange(serverSocketStatus);
+        }
+
+        private void OnNoSSLSocketStatusChange(TCPClient myTCPClient, SocketStatus serverSocketStatus)
+        {
+            OnSocketStatusChange(serverSocketStatus);
+        }
+
+        internal bool ClientExists()
+        {
+            if (EnableSSL)
+                return SSLClient != null;
+            else
+                return NoSSLClient != null;
+        }
+
+        internal void ClientConnectToServerAsync()
+        {
+            if (EnableSSL)
+                SSLClient.ConnectToServerAsync(ConnectToServerSSLCallback);
+            else
+                NoSSLClient.ConnectToServerAsync(ConnectToServerNoSSLCallback);
+        }
+
+        private void ConnectToServerSSLCallback(SecureTCPClient myTCPClient)
+        {
+            ConnectToServerCallback();
+        }
+        
+        private void ConnectToServerNoSSLCallback(TCPClient myTCPClient)
+        {
+            ConnectToServerCallback();
+        }
+                
+        internal void ClientSendData(byte[] data)
+        {
+            if (EnableSSL)
+                SSLClient.SendData(data, data.Length);
+            else
+                NoSSLClient.SendData(data, data.Length);
+        }
+
+        internal void ClientSendDataAsync(byte[] data)
+        {
+            if (EnableSSL)
+                SSLClient.SendDataAsync(data, data.Length, ClientSendSSLCallback);
+            else
+                NoSSLClient.SendDataAsync(data, data.Length, ClientSendNoSSLCallback);
+        }
+
+        private void ClientSendSSLCallback(SecureTCPClient myTCPClient, int numberOfBytesSent) {}
+        private void ClientSendNoSSLCallback(TCPClient myTCPClient, int numberOfBytesSent) {}
+
+        internal int ClientReceiveData()
+        {
+            if (EnableSSL)
+                return SSLClient.ReceiveData();
+            else
+                return NoSSLClient.ReceiveData();
+        }
+
+        internal void ClientReceiveDataAsync()
+        {
+            if (EnableSSL)
+                SSLClient.ReceiveDataAsync(ClientReceiveSSLCallback);
+            else
+                NoSSLClient.ReceiveDataAsync(ClientReceiveNoSSLCallback);
+        }
+        
+        private void ClientReceiveSSLCallback(SecureTCPClient myTCPClient, int numberOfBytesReceived)
+        {
+            ReceiveCallback(numberOfBytesReceived);
+        }
+ 
+        private void ClientReceiveNoSSLCallback(TCPClient myTCPClient, int numberOfBytesReceived)
+        {
+            ReceiveCallback(numberOfBytesReceived);
+        }
+        
+        internal byte[] ClientIncomingDataBuffer()
+        {
+            if (EnableSSL)
+                return SSLClient.IncomingDataBuffer;
+            else
+                return NoSSLClient.IncomingDataBuffer;
+        }
+        
+        internal void ClientDisconnect()
+        {
+            if (EnableSSL)
+                SSLClient.DisconnectFromServer();
+            else
+                NoSSLClient.DisconnectFromServer();
+        }
+
+        #endregion
     }
 }

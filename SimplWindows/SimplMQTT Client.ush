@@ -17,7 +17,7 @@
   Exclusions=1,19,20,21,88,89,167,168,179,213,214,215,216,217,225,226,248,249,266,267,310,362,378,380,405,407,408,409,478,522,537,554,586,590,611,624,718,756,767,830,841,842,854,883,955,1032,1062,1079,1128,1129,1134,1140,1157,1158,1195,1199,1220,1221,1222,1223,1299,1348,1349,1439,1472,1473,1499,1746,1803,1975,2229,2354,2514,2523,2532,2706,2707,3235,3236,3427,3454,3567,3568,3601,3602,3708,3902,3903,3912,3918,3925,3926,4206,4207,6089,6101,6114,6136,6343,6356,6357,6423,
   Exclusions_CDS=5,7
   Inclusions_CDS=6
-  Name=SimplMQTT Client (No SSL)
+  Name=SimplMQTT Client
   SmplCName=SimplMQTT Client.usp
   Code=1
   SysRev5=4.006
@@ -44,12 +44,18 @@
   InputSigType10=Digital
   InputCue11=[~UNUSED~]
   InputSigType11=Digital
-  InputCue12=enable
+  InputCue12=[~UNUSED~]
   InputSigType12=Digital
   InputCue13=[~UNUSED~]
   InputSigType13=Digital
-  InputCue14=d_in[#]
+  InputCue14=[~UNUSED~]
   InputSigType14=Digital
+  InputCue15=enable
+  InputSigType15=Digital
+  InputCue16=[~UNUSED~]
+  InputSigType16=Digital
+  InputCue17=d_in[#]
+  InputSigType17=Digital
   OutputCue1=[~UNUSED~]
   OutputSigType1=Digital
   OutputCue2=[~UNUSED~]
@@ -72,12 +78,18 @@
   OutputSigType10=Digital
   OutputCue11=[~UNUSED~]
   OutputSigType11=Digital
-  OutputCue12=connect_fb
+  OutputCue12=[~UNUSED~]
   OutputSigType12=Digital
   OutputCue13=[~UNUSED~]
   OutputSigType13=Digital
-  OutputCue14=d_out[#]
+  OutputCue14=[~UNUSED~]
   OutputSigType14=Digital
+  OutputCue15=connect_fb
+  OutputSigType15=Digital
+  OutputCue16=[~UNUSED~]
+  OutputSigType16=Digital
+  OutputCue17=d_out[#]
+  OutputSigType17=Digital
   InputList2Cue1=a_in[1]
   InputList2SigType1=Analog
   InputList2Cue2=a_in[2]
@@ -133,92 +145,98 @@
   ParamSigType5=String
   ParamCue6=Password
   ParamSigType6=String
-  ParamCue7=WillSettings
-  ParamSigType7=String
-  ParamCue8=WillMessage
+  ParamCue7=UseSSL,0d,1d
+  ParamSigType7=List
+  ParamCue8=SSLCertificateFile
   ParamSigType8=String
-  ParamCue9=CleanSession,0d,1d
-  ParamSigType9=List
-  ParamCue10=PublishOnConnect,0d,1d
-  ParamSigType10=List
-  ParamCue11=BufferSize
-  ParamSigType11=Constant
-  ParamCue12=Logging,0d,1d
+  ParamCue9=SSLPrivateKeyFile
+  ParamSigType9=String
+  ParamCue10=WillSettings
+  ParamSigType10=String
+  ParamCue11=WillMessage
+  ParamSigType11=String
+  ParamCue12=CleanSession,0d,1d
   ParamSigType12=List
-  ParamCue13=[~UNUSED~]
-  ParamSigType13=Constant
-  ParamCue14=[~UNUSED~]
+  ParamCue13=PublishOnConnect,0d,1d
+  ParamSigType13=List
+  ParamCue14=BufferSize
   ParamSigType14=Constant
-  ParamCue15=Settings[1]
-  ParamSigType15=String
-  ParamCue16=Settings[2]
-  ParamSigType16=String
-  ParamCue17=Settings[3]
-  ParamSigType17=String
-  ParamCue18=Settings[4]
+  ParamCue15=Logging,0d,1d
+  ParamSigType15=List
+  ParamCue16=[~UNUSED~]
+  ParamSigType16=Constant
+  ParamCue17=[~UNUSED~]
+  ParamSigType17=Constant
+  ParamCue18=Settings[1]
   ParamSigType18=String
-  ParamCue19=Settings[5]
+  ParamCue19=Settings[2]
   ParamSigType19=String
-  ParamCue20=Settings[6]
+  ParamCue20=Settings[3]
   ParamSigType20=String
-  ParamCue21=Settings[7]
+  ParamCue21=Settings[4]
   ParamSigType21=String
-  ParamCue22=Settings[8]
+  ParamCue22=Settings[5]
   ParamSigType22=String
-  ParamCue23=Settings[9]
+  ParamCue23=Settings[6]
   ParamSigType23=String
-  ParamCue24=Settings[10]
+  ParamCue24=Settings[7]
   ParamSigType24=String
-  ParamCue25=Settings[11]
+  ParamCue25=Settings[8]
   ParamSigType25=String
-  ParamCue26=Settings[12]
+  ParamCue26=Settings[9]
   ParamSigType26=String
-  ParamCue27=Settings[13]
+  ParamCue27=Settings[10]
   ParamSigType27=String
-  ParamCue28=Settings[14]
+  ParamCue28=Settings[11]
   ParamSigType28=String
-  ParamCue29=Settings[15]
+  ParamCue29=Settings[12]
   ParamSigType29=String
-  ParamCue30=Settings[16]
+  ParamCue30=Settings[13]
   ParamSigType30=String
-  ParamCue31=Settings[17]
+  ParamCue31=Settings[14]
   ParamSigType31=String
-  ParamCue32=Settings[18]
+  ParamCue32=Settings[15]
   ParamSigType32=String
-  ParamCue33=Settings[19]
+  ParamCue33=Settings[16]
   ParamSigType33=String
-  ParamCue34=Settings[20]
+  ParamCue34=Settings[17]
   ParamSigType34=String
-  ParamCue35=Settings[21]
+  ParamCue35=Settings[18]
   ParamSigType35=String
-  ParamCue36=Settings[22]
+  ParamCue36=Settings[19]
   ParamSigType36=String
-  ParamCue37=Settings[23]
+  ParamCue37=Settings[20]
   ParamSigType37=String
-  ParamCue38=Settings[24]
+  ParamCue38=Settings[21]
   ParamSigType38=String
-  ParamCue39=Settings[25]
+  ParamCue39=Settings[22]
   ParamSigType39=String
-  ParamCue40=Settings[26]
+  ParamCue40=Settings[23]
   ParamSigType40=String
-  ParamCue41=Settings[27]
+  ParamCue41=Settings[24]
   ParamSigType41=String
-  ParamCue42=Settings[28]
+  ParamCue42=Settings[25]
   ParamSigType42=String
-  ParamCue43=Settings[29]
+  ParamCue43=Settings[26]
   ParamSigType43=String
-  ParamCue44=Settings[30]
+  ParamCue44=Settings[27]
   ParamSigType44=String
-  MinVariableInputs=23
-  MaxVariableInputs=23
+  ParamCue45=Settings[28]
+  ParamSigType45=String
+  ParamCue46=Settings[29]
+  ParamSigType46=String
+  ParamCue47=Settings[30]
+  ParamSigType47=String
+  MinVariableInputs=26
+  MaxVariableInputs=26
   MinVariableInputsList2=20
   MaxVariableInputsList2=20
-  MinVariableOutputs=23
-  MaxVariableOutputs=23
+  MinVariableOutputs=26
+  MaxVariableOutputs=26
   MinVariableOutputsList2=20
   MaxVariableOutputsList2=20
-  MinVariableParams=43
-  MaxVariableParams=43
+  MinVariableParams=46
+  MaxVariableParams=46
   Expand=expand_separately
   Expand2=expand_separately
   ProgramTree=Logic
@@ -245,9 +263,9 @@
   Pp10=10
   Pp11=11
   Pp12=12
+  Pp13=13
+  Pp14=14
   Pp15=15
-  Pp16=16
-  Pp17=17
   Pp18=18
   Pp19=19
   Pp20=20
@@ -275,7 +293,10 @@
   Pp42=42
   Pp43=43
   Pp44=44
-  MPp=44
+  Pp45=45
+  Pp46=46
+  Pp47=47
+  MPp=47
   NVStorage=10
   ParamSigType1=String
   SmplCInputCue1=o#
@@ -286,7 +307,7 @@
   SymJam=NonExclusive
   FileName=SimplMQTT Client.ush
   SIMPLPlusModuleEncoding=0
-  clz1=SimplMQTT.Client-NoSSL
+  clz1=SimplMQTT.Client
 [END]
 [BEGIN]
   ObjTp=Dp
@@ -316,7 +337,7 @@
   ObjTp=Dp
   H=4
   Tp=1
-  SD=TCP port used by the MQTT broker (default = 8883).
+  SD=TCP port used by the MQTT broker (default = 1883, or 8883 for SSL).
   HD=True
   DV=1883d
   Sgn=0
@@ -352,6 +373,45 @@
   ObjTp=Dp
   H=7
   Tp=1
+  SD=Set to True to enable SSL encryption.
+  HD=True
+  DV=0d
+  Sgn=0
+  Lng=False
+  NF=1
+  NoS=True
+  DNF=1
+  VVS=2
+  VN=2
+  Val1=0d
+  Lbl1=False
+  Val2=1d
+  Lbl2=True
+[END]
+[BEGIN]
+  ObjTp=Dp
+  H=8
+  Tp=1
+  SD=Filename of SSL Certificate (must be located in NVRAM folder).
+  HD=True
+  DV=x
+  NoS=False
+  VVS=0
+[END]
+[BEGIN]
+  ObjTp=Dp
+  H=9
+  Tp=1
+  SD=Filename of SSL Private Key (must be located in NVRAM folder).
+  HD=True
+  DV=x
+  NoS=False
+  VVS=0
+[END]
+[BEGIN]
+  ObjTp=Dp
+  H=10
+  Tp=1
   SD=Format = <QoS (0/1)><Retain (R/x)>;<Topic>, i.e. 1R;device/LWT
   HD=True
   DV=x
@@ -360,7 +420,7 @@
 [END]
 [BEGIN]
   ObjTp=Dp
-  H=8
+  H=11
   Tp=1
   SD=Specifies the Will message.
   HD=True
@@ -370,7 +430,7 @@
 [END]
 [BEGIN]
   ObjTp=Dp
-  H=9
+  H=12
   Tp=1
   SD=Set to True to enforce a Clean Session when connecting to the broker.
   HD=True
@@ -389,11 +449,11 @@
 [END]
 [BEGIN]
   ObjTp=Dp
-  H=10
+  H=13
   Tp=1
   SD=Set to True to publish the current value of all inputs on connection to the broker.
   HD=True
-  DV=0d
+  DV=1d
   Sgn=0
   Lng=False
   NF=1
@@ -408,7 +468,7 @@
 [END]
 [BEGIN]
   ObjTp=Dp
-  H=11
+  H=14
   Tp=1
   SD=Determines the maximum packet size that can be handled.
   HD=True
@@ -424,11 +484,11 @@
 [END]
 [BEGIN]
   ObjTp=Dp
-  H=12
+  H=15
   Tp=1
   SD=Set to Enabled to enable logging via CrestronLogger.
   HD=True
-  DV=0d
+  DV=1d
   Sgn=0
   Lng=False
   NF=1
@@ -440,36 +500,6 @@
   Lbl1=Disabled
   Val2=1d
   Lbl2=Enabled
-[END]
-[BEGIN]
-  ObjTp=Dp
-  H=15
-  Tp=1
-  SD=Format = <Subscribe QoS (0/1/x)><Retain (R/x)>;<Topic>, i.e. 1R;MyTopic
-  HD=True
-  DV=x
-  NoS=False
-  VVS=0
-[END]
-[BEGIN]
-  ObjTp=Dp
-  H=16
-  Tp=1
-  SD=Format = <Subscribe QoS (0/1/x)><Retain (R/x)>;<Topic>, i.e. 1R;MyTopic
-  HD=True
-  DV=x
-  NoS=False
-  VVS=0
-[END]
-[BEGIN]
-  ObjTp=Dp
-  H=17
-  Tp=1
-  SD=Format = <Subscribe QoS (0/1/x)><Retain (R/x)>;<Topic>, i.e. 1R;MyTopic
-  HD=True
-  DV=x
-  NoS=False
-  VVS=0
 [END]
 [BEGIN]
   ObjTp=Dp
@@ -740,4 +770,38 @@
   DV=x
   NoS=False
   VVS=0
+[END]
+[BEGIN]
+  ObjTp=Dp
+  H=45
+  Tp=1
+  SD=Format = <Subscribe QoS (0/1/x)><Retain (R/x)>;<Topic>, i.e. 1R;MyTopic
+  HD=True
+  DV=x
+  NoS=False
+  VVS=0
+[END]
+[BEGIN]
+  ObjTp=Dp
+  H=46
+  Tp=1
+  SD=Format = <Subscribe QoS (0/1/x)><Retain (R/x)>;<Topic>, i.e. 1R;MyTopic
+  HD=True
+  DV=x
+  NoS=False
+  VVS=0
+[END]
+[BEGIN]
+  ObjTp=Dp
+  H=47
+  Tp=1
+  SD=Format = <Subscribe QoS (0/1/x)><Retain (R/x)>;<Topic>, i.e. 1R;MyTopic
+  HD=True
+  DV=x
+  NoS=False
+  VVS=0
+[END]
+[BEGIN]
+ObjTp=Status
+HeaderCompatible=False
 [END]
