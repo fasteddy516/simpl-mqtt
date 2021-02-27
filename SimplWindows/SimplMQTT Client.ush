@@ -137,7 +137,7 @@
   ParamCue1=[Reference Name]
   ParamCue2=ClientID
   ParamSigType2=String
-  ParamCue3=BrokerAddress
+  ParamCue3=Broker
   ParamSigType3=String
   ParamCue4=BrokerPort
   ParamSigType4=Constant
@@ -800,8 +800,4 @@
   DV=x
   NoS=False
   VVS=0
-[END]
-[BEGIN]
-ObjTp=Status
-HeaderCompatible=False
 [END]

@@ -75,7 +75,7 @@ namespace SimplMQTT.Client
         /// </summary>
         public string Password { get; internal set; }
 
-        public IPAddress IPAddressOfTheServer { get; internal set; }
+        public string Broker { get; internal set; }
 
         public int BufferSize { get; internal set; }
         /// <summary>

@@ -73,8 +73,8 @@ string_parameter ClientID[20];
 	propShortDescription = "String used to identify the client to the broker - must be unique for each client.";
 #end_parameter_properties
 
-string_parameter BrokerAddress[14];
-#begin_parameter_properties BrokerAddress
+string_parameter Broker[14];
+#begin_parameter_properties Broker
 	propDefaultUnit = unitString;
 	propValidUnits = unitString;
 	propShortDescription = "IP address of the MQTT broker.";
@@ -436,7 +436,7 @@ function main()
 
 		client.Initialize(
             ClientID,
-            BrokerAddress,
+            Broker,
             BrokerPort,
             UseSSL,
 			Username,

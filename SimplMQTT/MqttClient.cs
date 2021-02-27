@@ -89,7 +89,7 @@ namespace SimplMQTT.Client
             MqttSettings.Instance.Password = password;
             MqttSettings.Instance.BufferSize = Convert.ToInt32(bufferSize);
             MqttSettings.Instance.Port = Convert.ToInt32(brokerPort);
-            MqttSettings.Instance.IPAddressOfTheServer = IPAddress.Parse(brokerAddress);
+            MqttSettings.Instance.Broker = brokerAddress;
             EnableSSL = (enableSSL > 0);
             #if USE_LOGGER
                 CrestronLogger.WriteToLog("Instance Settings initialized", 1);
@@ -290,7 +290,7 @@ namespace SimplMQTT.Client
         public void Connect()
         {
             #if USE_LOGGER
-                CrestronLogger.WriteToLog("MQTTCLIENT - Connect , attempting connection to " + MqttSettings.Instance.IPAddressOfTheServer.ToString(), 1);
+                CrestronLogger.WriteToLog("MQTTCLIENT - Connect , attempting connection to " + MqttSettings.Instance.Broker.ToString(), 1);
             #endif
             ClientConnectToServerAsync();
         }
