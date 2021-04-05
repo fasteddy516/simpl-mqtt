@@ -1,9 +1,7 @@
 using System;
 using System.Text;
 
-#if USE_LOGGER
 using Crestron.SimplSharp.CrestronLogger;
-#endif
 
 using SimplMQTT.Client.Exceptions;
 
@@ -293,9 +291,7 @@ namespace SimplMQTT.Client.Messages
             // get remaining length and allocate buffer
             int remainingLength = MqttMsgBase.decodeRemainingLength(data);
             buffer = new byte[remainingLength];
-            #if USE_LOGGER
-                CrestronLogger.WriteToLog("Remaining  length : " + remainingLength, 1);
-            #endif
+            CrestronLogger.WriteToLog("Remaining  length : " + remainingLength, 1);
             // buffer is filled with remaing length...
             for (int i = 2, j = 0; j < remainingLength; i++, j++)
             {
@@ -306,9 +302,7 @@ namespace SimplMQTT.Client.Messages
             protNameUtf8Length |= buffer[index++];
             protNameUtf8 = new byte[protNameUtf8Length];
             Array.Copy(buffer, index, protNameUtf8, 0, protNameUtf8Length);
-            #if USE_LOGGER
-                CrestronLogger.WriteToLog("Prot Name : " + Encoding.UTF8.GetString(protNameUtf8,0,protNameUtf8.Length),1);
-            #endif
+            CrestronLogger.WriteToLog("Prot Name : " + Encoding.UTF8.GetString(protNameUtf8,0,protNameUtf8.Length),1);
             index += protNameUtf8Length;
             msg.protocolName = new String(Encoding.UTF8.GetChars(protNameUtf8));
             // [v3.1.1] wrong protocol name
@@ -339,11 +333,9 @@ namespace SimplMQTT.Client.Messages
             clientIdUtf8Length = ((buffer[index++] << 8) & 0xFF00);
             clientIdUtf8Length |= buffer[index++];
             clientIdUtf8 = new byte[clientIdUtf8Length];
-            #if USE_LOGGER
-                CrestronLogger.WriteToLog("Client Length: " + clientIdUtf8Length, 1);
-                CrestronLogger.WriteToLog("Index Value: " + index,1);
-                CrestronLogger.WriteToLog("Buffer size : " + buffer.Length, 1);
-            #endif
+            CrestronLogger.WriteToLog("Client Length: " + clientIdUtf8Length, 1);
+            CrestronLogger.WriteToLog("Index Value: " + index,1);
+            CrestronLogger.WriteToLog("Buffer size : " + buffer.Length, 1);
             Array.Copy(buffer, index, clientIdUtf8, 0, clientIdUtf8Length);
             index += clientIdUtf8Length;
             msg.clientId = new String(Encoding.UTF8.GetChars(clientIdUtf8));
@@ -389,9 +381,7 @@ namespace SimplMQTT.Client.Messages
                 index += passwordUtf8Length;
                 msg.password = new String(Encoding.UTF8.GetChars(passwordUtf8));
             }
-            #if USE_LOGGER
-                CrestronLogger.WriteToLog("CONNECT PARSE SUCCESS", 1);
-            #endif
+            CrestronLogger.WriteToLog("CONNECT PARSE SUCCESS", 1);
             return msg;
         }
 

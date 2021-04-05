@@ -4,9 +4,7 @@ using System.Linq;
 using System.Text;
 
 using Crestron.SimplSharp;
-#if USE_LOGGER
-    using Crestron.SimplSharp.CrestronLogger;
-#endif
+using Crestron.SimplSharp.CrestronLogger;
 
 using SimplMQTT.Client.Events;
 using SimplMQTT.Client.Messages;
@@ -34,25 +32,19 @@ namespace SimplMQTT.Client.Managers
             {
                 case MqttMsgBase.QOS_LEVEL_AT_MOST_ONCE:
                 {
-                    #if USE_LOGGER
-                        CrestronLogger.WriteToLog("MQTTPUBLISHERMANAGER - RouteOnQoS - Routing qos0 message", 5);
-                    #endif
+                    CrestronLogger.WriteToLog("MQTTPUBLISHERMANAGER - RouteOnQoS - Routing qos0 message", 5);
                     ManageQoS0(publish);
                     break;
                 }
                 case MqttMsgBase.QOS_LEVEL_AT_LEAST_ONCE:
                 {
-                    #if USE_LOGGER
-                        CrestronLogger.WriteToLog("MQTTPUBLISHERMANAGER - RouteOnQoS - Routing qos1 message", 5);
-                    #endif
+                    CrestronLogger.WriteToLog("MQTTPUBLISHERMANAGER - RouteOnQoS - Routing qos1 message", 5);
                     ManageQoS1(publish);
                     break;
                 }
                 case MqttMsgBase.QOS_LEVEL_EXACTLY_ONCE:
                 {
-                    #if USE_LOGGER
-                        CrestronLogger.WriteToLog("MQTTPUBLISHERMANAGER - RouteOnQoS - Routing qos2 message", 5);
-                    #endif
+                    CrestronLogger.WriteToLog("MQTTPUBLISHERMANAGER - RouteOnQoS - Routing qos2 message", 5);
                     ManageQoS2(publish);
                     break;
                 }

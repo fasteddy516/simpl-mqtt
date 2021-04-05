@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-#if USE_LOGGER
-    using Crestron.SimplSharp.CrestronLogger;
-#endif
+using Crestron.SimplSharp.CrestronLogger;
 
 using SimplMQTT.Client.Messages;
 
@@ -16,10 +14,8 @@ namespace SimplMQTT.Client.Utility
 
         public MqttMsgBase DecodeControlPacket(byte[] data)
         {
-            #if USE_LOGGER
-                #if PACKET_DEBUG
-                    CrestronLogger.WriteToLog("MQTTCLIENT - RECEIVE - " + BitConverter.ToString(data), 2);
-                #endif
+            #if PACKET_DEBUG
+                CrestronLogger.WriteToLog("MQTTCLIENT - RECEIVE - " + BitConverter.ToString(data), 2);
             #endif
             
             byte fixedHeaderFirstByte = (byte)(data[0] >> MSG_TYPE_OFFSET);

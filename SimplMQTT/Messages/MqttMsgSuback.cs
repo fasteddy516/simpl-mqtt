@@ -1,8 +1,6 @@
 using System;
 
-#if USE_LOGGER
 using Crestron.SimplSharp.CrestronLogger;
-#endif
 
 using SimplMQTT.Client.Exceptions;
 
@@ -77,9 +75,7 @@ namespace SimplMQTT.Client.Messages
             {
                 msg.grantedQosLevels[qosIdx++] = buffer[index++];
             } while (index < remainingLength);
-            #if USE_LOGGER
-                CrestronLogger.WriteToLog("PARSE SUBACK SUCCESS", 2);
-            #endif
+            CrestronLogger.WriteToLog("PARSE SUBACK SUCCESS", 2);
             return msg;
         }
 

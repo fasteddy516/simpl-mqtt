@@ -1,6 +1,4 @@
-#if USE_LOGGER
 using Crestron.SimplSharp.CrestronLogger;
-#endif
 
 using SimplMQTT.Client.Exceptions;
 
@@ -93,9 +91,7 @@ namespace SimplMQTT.Client.Messages
             // message id
             msg.messageId = (ushort)((buffer[index++] << 8) & 0xFF00);
             msg.messageId |= (buffer[index++]);
-            #if USE_LOGGER
-                CrestronLogger.WriteToLog("PARSE PUBACK SUCCESS", 2);
-            #endif
+            CrestronLogger.WriteToLog("PARSE PUBACK SUCCESS", 2);
             return msg;
         }
 

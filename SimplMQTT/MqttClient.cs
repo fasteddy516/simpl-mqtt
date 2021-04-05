@@ -6,9 +6,7 @@ using System.Text;
 using Crestron.SimplSharp;
 using Crestron.SimplSharp.CrestronIO;
 using Crestron.SimplSharp.CrestronSockets;
-#if USE_LOGGER
-    using Crestron.SimplSharp.CrestronLogger;
-#endif
+using Crestron.SimplSharp.CrestronLogger;
 using Crestron.SimplSharp.Cryptography.X509Certificates;
 
 using SimplMQTT.Client.Events;
@@ -61,12 +59,10 @@ namespace SimplMQTT.Client
 
         public MqttClient()
         {
-            #if USE_LOGGER
-                CrestronLogger.Mode = LoggerModeEnum.DEFAULT;
-                CrestronLogger.PrintTheLog(false);
-                CrestronLogger.Initialize(10);
-                CrestronLogger.LogOnlyCurrentDebugLevel = false;
-            #endif
+            CrestronLogger.Mode = LoggerModeEnum.DEFAULT;
+            CrestronLogger.PrintTheLog(false);
+            CrestronLogger.Initialize(10);
+            CrestronLogger.LogOnlyCurrentDebugLevel = false;
         }
 
         public void Initialize(
@@ -91,9 +87,7 @@ namespace SimplMQTT.Client
             MqttSettings.Instance.Port = Convert.ToInt32(brokerPort);
             MqttSettings.Instance.Broker = brokerAddress;
             EnableSSL = (enableSSL > 0);
-            #if USE_LOGGER
-                CrestronLogger.WriteToLog("Instance Settings initialized", 1);
-            #endif
+            CrestronLogger.WriteToLog("Instance Settings initialized", 1);
             
             KeepAlivePeriod = 0; // currently set to 0, as the keepalive mechanism has not been implemented
             ClientID = clientID;
@@ -105,9 +99,7 @@ namespace SimplMQTT.Client
             Subscriptions = new Dictionary<string, byte>();
             CleanSession = cleanSession == 0 ? false : true;
 
-            #if USE_LOGGER
-                CrestronLogger.WriteToLog("Client settings initialized", 1);
-            #endif
+            CrestronLogger.WriteToLog("Client settings initialized", 1);
 
             try
             {
@@ -138,9 +130,7 @@ namespace SimplMQTT.Client
                 OnErrorOccured("ERROR DURING INITIALIZATION: " + e.Message);
             }
 
-            #if USE_LOGGER
-                CrestronLogger.WriteToLog("MQTTCLIENT - Initialize - completed : " + clientID, 1);
-            #endif
+            CrestronLogger.WriteToLog("MQTTCLIENT - Initialize - completed : " + clientID, 1);
         }
 
 
@@ -209,45 +199,37 @@ namespace SimplMQTT.Client
 
         public void Log(ushort val)
         {
-            #if USE_LOGGER
-                bool printTheLog = val == 0 ? false : true;
-                CrestronLogger.PrintTheLog(printTheLog);
-                if (!printTheLog)
-                    CrestronLogger.ShutdownLogger();
-                else if (!CrestronLogger.LoggerInitialized)
-                {
-                    CrestronLogger.Initialize(10);
-                    CrestronLogger.LogOnlyCurrentDebugLevel = false;
-                }
-            #else
-                ErrorLog.Warn("Module not compiled with CrestronLogger support.");
-            #endif
+            bool printTheLog = val == 0 ? false : true;
+            CrestronLogger.PrintTheLog(printTheLog);
+            if (!printTheLog)
+                CrestronLogger.ShutdownLogger();
+            else if (!CrestronLogger.LoggerInitialized)
+            {
+                CrestronLogger.Initialize(10);
+                CrestronLogger.LogOnlyCurrentDebugLevel = false;
+            }
         }
 
         public void SetLogLevel(uint logLevel)
         {
-            #if USE_LOGGER
-                if (logLevel == 0)
+            if (logLevel == 0)
+            {
+                CrestronLogger.DebugLevel = 10;
+                CrestronLogger.LogOnlyCurrentDebugLevel = false;
+            }
+            else
+            {
+                logLevel = (logLevel > 10) ? 10 : logLevel;
+                if (logLevel < 0)
                 {
-                    CrestronLogger.DebugLevel = 10;
-                    CrestronLogger.LogOnlyCurrentDebugLevel = false;
+                    SetLogLevel(0);
                 }
                 else
                 {
-                    logLevel = (logLevel > 10) ? 10 : logLevel;
-                    if (logLevel < 0)
-                    {
-                        SetLogLevel(0);
-                    }
-                    else
-                    {
-                        CrestronLogger.LogOnlyCurrentDebugLevel = true;
-                        CrestronLogger.DebugLevel = logLevel;
-                    }
+                    CrestronLogger.LogOnlyCurrentDebugLevel = true;
+                    CrestronLogger.DebugLevel = logLevel;
                 }
-            #else
-                ErrorLog.Warn("Module not compiled with CrestronLogger support.");
-            #endif
+            }
         }
 
         public void OnMessageArrived(string topic, string value)
@@ -264,9 +246,7 @@ namespace SimplMQTT.Client
 
         private void OnSocketStatusChange(SocketStatus serverSocketStatus)
         {
-            #if USE_LOGGER
-                CrestronLogger.WriteToLog("MQTTCLIENT - OnSocketStatusChange - socket status : " + serverSocketStatus, 1);
-            #endif
+            CrestronLogger.WriteToLog("MQTTCLIENT - OnSocketStatusChange - socket status : " + serverSocketStatus, 1);
             if (serverSocketStatus != SocketStatus.SOCKET_STATUS_CONNECTED)
             {
                 OnConnectionStateChanged(0);
@@ -289,9 +269,7 @@ namespace SimplMQTT.Client
 
         public void Connect()
         {
-            #if USE_LOGGER
-                CrestronLogger.WriteToLog("MQTTCLIENT - Connect , attempting connection to " + MqttSettings.Instance.Broker.ToString(), 1);
-            #endif
+            CrestronLogger.WriteToLog("MQTTCLIENT - Connect , attempting connection to " + MqttSettings.Instance.Broker.ToString(), 1);
             ClientConnectToServerAsync();
         }
 
@@ -320,17 +298,13 @@ namespace SimplMQTT.Client
             }
             catch (MqttClientException e)
             {
-                #if USE_LOGGER
-                    CrestronLogger.WriteToLog("MQTTCLIENT - ConnectToServerCallback - Error occured : " + e.ErrorCode, 7);
-                    CrestronLogger.WriteToLog("MQTTCLIENT - ConnectToServerCallback - Error occured : " + e.StackTrace, 7);
-                #endif
+                CrestronLogger.WriteToLog("MQTTCLIENT - ConnectToServerCallback - Error occured : " + e.ErrorCode, 7);
+                CrestronLogger.WriteToLog("MQTTCLIENT - ConnectToServerCallback - Error occured : " + e.StackTrace, 7);
             }
             catch (Exception e)
             {
-                #if USE_LOGGER
-                    CrestronLogger.WriteToLog("MQTTCLIENT - ConnectToServerCallback - Error occured : " + e.Message, 7);
-                    CrestronLogger.WriteToLog("MQTTCLIENT - ConnectToServerCallback - Error occured : " + e.StackTrace, 7);
-                #endif
+                CrestronLogger.WriteToLog("MQTTCLIENT - ConnectToServerCallback - Error occured : " + e.Message, 7);
+                CrestronLogger.WriteToLog("MQTTCLIENT - ConnectToServerCallback - Error occured : " + e.StackTrace, 7);
                 //Disconnect from server , signal error at module lvl;
             }
         }
@@ -361,11 +335,9 @@ namespace SimplMQTT.Client
 
         public void Send(MqttMsgBase packet)
         {
-            #if USE_LOGGER
-                CrestronLogger.WriteToLog("MQTTCLIENT - SEND - Sending packet type " + packet, 2);
-                #if PACKET_DEBUG
-                    CrestronLogger.WriteToLog("MQTTCLIENT - SEND - " + BitConverter.ToString(packet.GetBytes(ProtocolVersion)), 2);
-                #endif
+            CrestronLogger.WriteToLog("MQTTCLIENT - SEND - Sending packet type " + packet, 2);
+            #if PACKET_DEBUG
+                CrestronLogger.WriteToLog("MQTTCLIENT - SEND - " + BitConverter.ToString(packet.GetBytes(ProtocolVersion)), 2);
             #endif
             ClientSendDataAsync(packet.GetBytes(ProtocolVersion));
         }
@@ -388,10 +360,8 @@ namespace SimplMQTT.Client
             }
             catch (Exception e)
             {
-                #if USE_LOGGER
-                    CrestronLogger.WriteToLog("MQTTCLIENT - ReceiveCallback - Error occured : " + e.InnerException + " " + e.Message, 7);
-                    CrestronLogger.WriteToLog("MQTTCLIENT - ReceiveCallback - Error occured : " + e.StackTrace, 7);
-                #endif
+                CrestronLogger.WriteToLog("MQTTCLIENT - ReceiveCallback - Error occured : " + e.InnerException + " " + e.Message, 7);
+                CrestronLogger.WriteToLog("MQTTCLIENT - ReceiveCallback - Error occured : " + e.StackTrace, 7);
                 OnErrorOccured(e.Message);
                 Disconnect(false);
             }
@@ -536,18 +506,14 @@ namespace SimplMQTT.Client
                 {
                     case MqttMsgBase.QOS_LEVEL_AT_MOST_ONCE:
                         {
-                            #if USE_LOGGER
-                                CrestronLogger.WriteToLog("MQTTCLIENT - HandlePUBLISHType - Routing qos0 message", 5);
-                            #endif
+                            CrestronLogger.WriteToLog("MQTTCLIENT - HandlePUBLISHType - Routing qos0 message", 5);
                             string publishPayload = System.Text.Encoding.ASCII.GetString(publish.Message, 0, publish.Message.Length);
                             OnMessageArrived(publish.Topic, publishPayload);
                             break;
                         }
                     case MqttMsgBase.QOS_LEVEL_AT_LEAST_ONCE:
                         {
-                            #if USE_LOGGER
-                                CrestronLogger.WriteToLog("MQTTCLIENT - HandlePUBLISHType - Routing qos1 message", 5);
-                            #endif
+                            CrestronLogger.WriteToLog("MQTTCLIENT - HandlePUBLISHType - Routing qos1 message", 5);
                             string publishPayload = System.Text.Encoding.ASCII.GetString(publish.Message, 0, publish.Message.Length);
                             Send(MsgBuilder.BuildPubAck(publish.MessageId));
                             OnMessageArrived(publish.Topic, publishPayload);
@@ -555,9 +521,7 @@ namespace SimplMQTT.Client
                         }
                     case MqttMsgBase.QOS_LEVEL_EXACTLY_ONCE:
                         {
-                            #if USE_LOGGER
-                                CrestronLogger.WriteToLog("MQTTCLIENT - HandlePUBLISHType - Routing qos2 message", 5);
-                            #endif
+                            CrestronLogger.WriteToLog("MQTTCLIENT - HandlePUBLISHType - Routing qos2 message", 5);
                             //ManageQoS2(publish);
                             break;
                         }
@@ -585,9 +549,7 @@ namespace SimplMQTT.Client
 
         private void HandleSUBACKype(MqttMsgSuback mqttMsgSuback)
         {
-            #if USE_LOGGER
-                CrestronLogger.WriteToLog("MQTTCLIENT - HANDLESUBACK -", 6);
-            #endif
+            CrestronLogger.WriteToLog("MQTTCLIENT - HANDLESUBACK -", 6);
         }
 
         private void SubscribeToTopics()
@@ -602,9 +564,7 @@ namespace SimplMQTT.Client
 
         private void Disconnect(bool withDisconnectPacket)
         {
-            #if USE_LOGGER
-                CrestronLogger.WriteToLog("MQTTCLIENT - DISCONNECT - Restarting client", 8);
-            #endif
+            CrestronLogger.WriteToLog("MQTTCLIENT - DISCONNECT - Restarting client", 8);
             Stop();
         }
 

@@ -3,9 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Text;
 
-#if USE_LOGGER
 using Crestron.SimplSharp.CrestronLogger;
-#endif
 
 using SimplMQTT.Client.Exceptions;
 
@@ -131,13 +129,11 @@ namespace SimplMQTT.Client.Messages
                 msg.topics[i] = (string)tmpTopics[i];
                 msg.qosLevels[i] = (byte)tmpQosLevels[i];
             }
-            #if USE_LOGGER
-                foreach (var t in msg.topics)
-                {
-                    CrestronLogger.WriteToLog("SUBSCRIBE ,Topics : " + t, 6);
-                }
-                CrestronLogger.WriteToLog("SUBSCRIBE ,parse SUCCESS", 6);
-            #endif
+            foreach (var t in msg.topics)
+            {
+                CrestronLogger.WriteToLog("SUBSCRIBE ,Topics : " + t, 6);
+            }
+            CrestronLogger.WriteToLog("SUBSCRIBE ,parse SUCCESS", 6);
             return msg;
         }
 
