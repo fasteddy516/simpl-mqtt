@@ -34,8 +34,6 @@ namespace SimplMQTT.Client
 
         private delegate void RouteControlPacketDelegate(MqttMsgBase packet);
         
-        #region client properties
-
         public ushort KeepAlivePeriod { get; private set; }
         public Dictionary<string, byte> Subscriptions { get; set; }
         public string ClientID { get; private set; }
@@ -49,13 +47,10 @@ namespace SimplMQTT.Client
         private string CertificateFile = "";
         private string KeyFile = "";
 
-        #endregion
-
         public event EventHandler<MessageReceivedEventArgs> MessageArrived;
         public event EventHandler<ErrorOccuredEventArgs> ErrorOccured;
         public event EventHandler<ConnectionStateChangedEventArgs> ConnectionStateChanged;
 
-        #region initialize
 
         public MqttClient()
         {
@@ -64,6 +59,7 @@ namespace SimplMQTT.Client
             CrestronLogger.Initialize(10);
             CrestronLogger.LogOnlyCurrentDebugLevel = false;
         }
+
 
         public void Initialize(
             string clientID,
@@ -133,7 +129,7 @@ namespace SimplMQTT.Client
             CrestronLogger.WriteToLog("MQTTCLIENT - Initialize - completed : " + clientID, 1);
         }
 
-
+        
         private byte[] ReadFromResource(string path)
         {
             FileStream stream = new FileStream(path, FileMode.Open, FileAccess.Read);
@@ -143,11 +139,13 @@ namespace SimplMQTT.Client
             return bytes;
         }
 
+        
         public void UseCertificate(string certificateFileName, string keyFileName)
         {
             CertificateFile = certificateFileName;
             KeyFile = keyFileName;
         }
+
 
         public void AddSubscription(string topic, uint qos)
         {
@@ -164,9 +162,6 @@ namespace SimplMQTT.Client
             }
         }
 
-        #endregion
-
-        #region FROM_TO_SIMPL_PLUS_MODULE
 
         public void Start()
         {
@@ -210,6 +205,7 @@ namespace SimplMQTT.Client
             }
         }
 
+        
         public void SetLogLevel(uint logLevel)
         {
             if (logLevel == 0)
@@ -232,18 +228,21 @@ namespace SimplMQTT.Client
             }
         }
 
+        
         public void OnMessageArrived(string topic, string value)
         {
             if (MessageArrived != null)
                 MessageArrived(this, new MessageReceivedEventArgs(topic, value));
         }
 
+        
         public void OnErrorOccured(string errorMessage)
         {
             if (ErrorOccured != null)
                 ErrorOccured(this, new ErrorOccuredEventArgs(errorMessage));
         }
 
+        
         private void OnSocketStatusChange(SocketStatus serverSocketStatus)
         {
             CrestronLogger.WriteToLog("MQTTCLIENT - OnSocketStatusChange - socket status : " + serverSocketStatus, 1);
@@ -255,6 +254,7 @@ namespace SimplMQTT.Client
             }
         }
 
+        
         public void Publish(string topic, string value, uint retain)
         {
             byte[] payload = Encoding.ASCII.GetBytes(value);
@@ -262,10 +262,7 @@ namespace SimplMQTT.Client
             publisherManager.Publish(msg);
             FreePacketIdentifier(msg.MessageId); // this can be done automatically as long as we only publish at QoS 0
         }
-
-        #endregion
-
-        #region CONNECTION_TO_BROKER
+        
 
         public void Connect()
         {
@@ -323,15 +320,13 @@ namespace SimplMQTT.Client
             if (ConnectionStateChanged != null)
                 ConnectionStateChanged(this, new ConnectionStateChangedEventArgs(connectionStatus));
         }
-
-        #endregion
-
-        #region SEND_CONTROL_PACKETS
+        
 
         public void OnPacketToSend(object sender, PacketToSendEventArgs args)
         {
             Send(args.Packet);
         }
+
 
         public void Send(MqttMsgBase packet)
         {
@@ -341,11 +336,8 @@ namespace SimplMQTT.Client
             #endif
             ClientSendDataAsync(packet.GetBytes(ProtocolVersion));
         }
-
-        #endregion
-
-        #region RECEIVE_CONTROL_PACKETS       
-
+        
+        
         private void ReceiveCallback(int numberOfBytesReceived)
         {
             try
@@ -368,6 +360,7 @@ namespace SimplMQTT.Client
 
         }
 
+        
         public void DecodeMultiplePacketsByteArray(byte[] data)
         {
             List<MqttMsgBase> packetsInTheByteArray = new List<MqttMsgBase>();
@@ -453,11 +446,7 @@ namespace SimplMQTT.Client
                     }
             }
         }
-
-
-        #endregion
-
-        #region PING
+        
 
         private void HandlePINGREQType(MqttMsgPingReq mqttMsgPingReq)
         {
@@ -468,16 +457,14 @@ namespace SimplMQTT.Client
         private void HandlePINGRESPType(MqttMsgPingResp mqttMsgPingResp)
         {
         }
-
-        #endregion
-
-        #region PUBLISH
+        
 
         private void HandlePUBCOMPType(MqttMsgPubcomp pubComp)
         {
             throw new NotImplementedException();
             //publisherManager.ManagePubComp(pubComp);
         }
+
 
         private void HandlePUBRELType(MqttMsgPubrel pubRel)
         {
@@ -487,17 +474,20 @@ namespace SimplMQTT.Client
             //OnMessageArrived(publish.Topic, publishPayload);
         }
 
+        
         private void HandlePUBRECType(MqttMsgPubrec pubRec)
         {
             throw new NotImplementedException();
             //publisherManager.ManagePubRec(pubRec);
         }
 
+        
         private void HandlePUBACKType(MqttMsgPuback pubAck)
         {
             publisherManager.ManagePubAck(pubAck);
         }
 
+        
         private void HandlePUBLISHType(MqttMsgPublish publish)
         {
             try
@@ -536,37 +526,32 @@ namespace SimplMQTT.Client
             }
 
         }
-
-
-        #endregion
-
-        #region SUBSCRIBE
+        
 
         private void HandleUNSUBACKype(MqttMsgUnsuback mqttMsgUnsuback)
         {
             throw new NotImplementedException();
         }
 
+        
         private void HandleSUBACKype(MqttMsgSuback mqttMsgSuback)
         {
             CrestronLogger.WriteToLog("MQTTCLIENT - HANDLESUBACK -", 6);
         }
 
+        
         private void SubscribeToTopics()
         {
             Send(MsgBuilder.BuildSubscribe(Subscriptions.Keys.ToArray(), Subscriptions.Values.ToArray(), GetNewPacketIdentifier()));
         }
-
-
-        #endregion
-
-        #region DISCONNECT
+        
 
         private void Disconnect(bool withDisconnectPacket)
         {
             CrestronLogger.WriteToLog("MQTTCLIENT - DISCONNECT - Restarting client", 8);
             Stop();
         }
+
 
         public void DisconnectTimerCallback(object userSpecific)
         {
@@ -577,8 +562,7 @@ namespace SimplMQTT.Client
                 Connect();
             }
         }
-        #endregion
-
+        
 
         internal ushort GetNewPacketIdentifier()
         {
@@ -594,13 +578,13 @@ namespace SimplMQTT.Client
             }
         }
 
+        
         internal void FreePacketIdentifier(ushort identifier)
         {
             if (packetIdentifiers.Contains(identifier))
                 packetIdentifiers.Remove(identifier);
         }
-
-       #region SSL / Non-SSL Abstraction
+        
 
         internal SocketStatus ClientStatus()
         {
@@ -610,16 +594,19 @@ namespace SimplMQTT.Client
                 return NoSSLClient.ClientStatus;
         }
 
+        
         private void OnSSLSocketStatusChange(SecureTCPClient myTCPClient, SocketStatus serverSocketStatus)
         {
             OnSocketStatusChange(serverSocketStatus);
         }
 
+        
         private void OnNoSSLSocketStatusChange(TCPClient myTCPClient, SocketStatus serverSocketStatus)
         {
             OnSocketStatusChange(serverSocketStatus);
         }
 
+        
         internal bool ClientExists()
         {
             if (EnableSSL)
@@ -628,6 +615,7 @@ namespace SimplMQTT.Client
                 return NoSSLClient != null;
         }
 
+        
         internal void ClientConnectToServerAsync()
         {
             if (EnableSSL)
@@ -636,16 +624,19 @@ namespace SimplMQTT.Client
                 NoSSLClient.ConnectToServerAsync(ConnectToServerNoSSLCallback);
         }
 
+        
         private void ConnectToServerSSLCallback(SecureTCPClient myTCPClient)
         {
             ConnectToServerCallback();
         }
+        
         
         private void ConnectToServerNoSSLCallback(TCPClient myTCPClient)
         {
             ConnectToServerCallback();
         }
                 
+        
         internal void ClientSendData(byte[] data)
         {
             if (EnableSSL)
@@ -654,6 +645,7 @@ namespace SimplMQTT.Client
                 NoSSLClient.SendData(data, data.Length);
         }
 
+        
         internal void ClientSendDataAsync(byte[] data)
         {
             if (EnableSSL)
@@ -662,8 +654,10 @@ namespace SimplMQTT.Client
                 NoSSLClient.SendDataAsync(data, data.Length, ClientSendNoSSLCallback);
         }
 
+        
         private void ClientSendSSLCallback(SecureTCPClient myTCPClient, int numberOfBytesSent) {}
         private void ClientSendNoSSLCallback(TCPClient myTCPClient, int numberOfBytesSent) {}
+
 
         internal int ClientReceiveData()
         {
@@ -673,6 +667,7 @@ namespace SimplMQTT.Client
                 return NoSSLClient.ReceiveData();
         }
 
+        
         internal void ClientReceiveDataAsync()
         {
             if (EnableSSL)
@@ -681,16 +676,19 @@ namespace SimplMQTT.Client
                 NoSSLClient.ReceiveDataAsync(ClientReceiveNoSSLCallback);
         }
         
+
         private void ClientReceiveSSLCallback(SecureTCPClient myTCPClient, int numberOfBytesReceived)
         {
             ReceiveCallback(numberOfBytesReceived);
         }
  
+
         private void ClientReceiveNoSSLCallback(TCPClient myTCPClient, int numberOfBytesReceived)
         {
             ReceiveCallback(numberOfBytesReceived);
         }
         
+
         internal byte[] ClientIncomingDataBuffer()
         {
             if (EnableSSL)
@@ -698,7 +696,8 @@ namespace SimplMQTT.Client
             else
                 return NoSSLClient.IncomingDataBuffer;
         }
-        
+ 
+       
         internal void ClientDisconnect()
         {
             if (EnableSSL)
@@ -706,7 +705,5 @@ namespace SimplMQTT.Client
             else
                 NoSSLClient.DisconnectFromServer();
         }
-
-        #endregion
     }
 }
